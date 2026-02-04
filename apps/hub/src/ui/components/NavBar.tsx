@@ -73,7 +73,7 @@ export const NavBar: React.FC<NavBarProps> = ({
                   activeTab === 'hub' ? "bg-white dark:bg-[#1c1c1e] shadow-sm text-blue-600 dark:text-blue-400" : "text-gray-400"
                 )}
               >
-                Workspace
+                App Hub
               </button>
               <button 
                 onClick={() => onTabChange('lab')}

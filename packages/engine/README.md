@@ -1,40 +1,35 @@
-# Daily Idea Lab Engine 🧠
+# OpenClaw Lab Engine 🧠
 
-The **Core Engine** and data repository for the Daily App Lab ecosystem. This is a headless repository that handles project generation, automation, and project storage.
+The **Core Runtime** and generation factory for the OpenClaw App Idea Lab. This is the headless layer that handles research, project generation, and storage.
 
 ## 🏗 Role & Function
 
-- **Engine Mode**: No independent UI. It provides the scripts and logic used by [Daily App Hub](../daily-app-hub).
-- **Data Repository**: Acts as the single source of truth for all `outputs/` and persistent `runtime/data/` (JSON).
-- **Automation Host**: Runs background idle tasks via `launchd` and system scripts.
+- **Engine Mode**: Provides the logic used by the [Idea Hub](../hub).
+- **Research Module**: Uses Azure OpenAI and Brave Search to synthesize market trends into actionable app ideas.
+- **Build Module**: Orchestrates `aider` to turn markdown specs into functional Vite/React codebases.
+- **Data Repository**: The single source of truth for all `outputs/` and persistent `runtime/data/` (JSON).
 
 ## 🏗 Project Structure
 
 - **`core/`**: The "brain" of the engine.
-  - `scripts/`: Production scripts for idle checking (`idle_gate.sh`) and scheduled runs (`run_idle_job.sh`).
-  - `modules/`: Internal logic for backlog selection and status marking.
-- **`outputs/`**: The actual generated Vite projects.
-- **`runtime/`**: Logs and JSON databases (`idea_backlog.json`, etc.).
+  - `generators/`: Logic for ideation and spec drafting.
+  - `modules/`: Internal logic for backlog selection, status tracking, and metadata extraction.
+- **`outputs/`**: The generated web applications.
+- **`runtime/`**: Logs and JSON databases (`idea_backlog.json`, `rag_index.json`).
 
 ## ⚙️ Workflows
 
-### 1. Manual/Forced Execution
-Bypasses idle gates and daily limits to generate the next item (or priority item):
-```bash
-./core/scripts/run_idle_job.sh --force
-```
+### 1. Research & Ideation
+The engine scans for "Product Gaps" and "User Friction" to generate high-value ideas that would assist an agent like OpenClaw.
 
-### 2. Background Automation
-Operates as a macOS LaunchAgent (`ai.dailyapplab.idle`). It periodically scans for system idle time to generate new experiments without user intervention.
+### 2. Autonomous Build
+Once an idea is selected, the engine generates a technical spec and delegates the implementation to an AI coder (Aider).
 
-### 3. Smart Counting
-Daily limits are now calculated based on **actually existing directories** in `outputs/`. Deleting a project automatically recovers your daily generation quota.
-
-## 🛠 Spec Compliance (DAILY_SPEC)
-All generated projects follow the `DAILY_SPEC.md`, ensuring:
-- **Self-Healing**: Error boundaries and watchdogs in every project.
-- **Scenarios**: Practical, goal-oriented application logic.
-- **Adaptive**: Built-in responsiveness for touch and mouse.
+### 3. Spec Compliance (DAILY_SPEC)
+All generated projects follow the `DAILY_SPEC.md` quality standard, ensuring:
+- **Self-Healing**: Error boundaries and watchdogs.
+- **Sim-Data**: High-fidelity mock data for immediate utility.
+- **Agent-Ready**: Clean structures that an AI agent can easily interact with.
 
 ---
 *The engine behind the experiments.*

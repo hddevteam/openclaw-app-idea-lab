@@ -20,6 +20,6 @@ export const LAB_OUTPUTS = path.join(LAB_ROOT, 'outputs');
 
 export const PORT = Number(process.env.DAILY_APP_LAB_PORT || 41777);
 
-export const USER = process.env.DAILY_APP_LAB_USER || 'ming';
+export const USER = process.env.DAILY_APP_LAB_USER || '';
 export const PASS = process.env.DAILY_APP_LAB_PASS || '';
 

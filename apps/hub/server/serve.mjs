@@ -295,6 +295,14 @@ const server = http.createServer(async (req, res) => {
   const projectMatch = url.pathname.match(/^\/(\d{4}-\d{2}-\d{2}[^/]*)(.*)$/);
   if (projectMatch) {
     const [_, projectId, rest] = projectMatch;
+
+    // Enforce trailing slash for the project base URL to ensure relative assets work
+    if (!rest && !url.pathname.endsWith('/')) {
+      res.writeHead(302, { 'Location': url.pathname + '/' + (url.search || '') });
+      res.end();
+      return;
+    }
+
     const projectDir = path.join(LAB_OUTPUTS, projectId);
     const distDir = path.join(projectDir, 'dist');
     
@@ -312,6 +320,7 @@ const server = http.createServer(async (req, res) => {
     if(mapped) {
       if(await serveFile(res, mapped, url)) return;
     }
+    // If we matched the prefix but file was not found, fall through to SPA fallback
   }
 
   // 2. SPA assets (must be checked before global fallthrough)
