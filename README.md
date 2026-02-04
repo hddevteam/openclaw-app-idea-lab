@@ -28,6 +28,8 @@ The magic happens when the **App Idea Lab** meets the **OpenClaw** agent ecosyst
 - **Productivity Incubator**: Every generated app is a reimagining of inefficient workflows. Idea Lab is more than a tool builder; it is a **fountain of creativity for liberating productivity**, turning ephemeral ideas into high-impact digital tools.
 - **From Inspiration to Reality**: Beyond simple chat interfaces, the Lab builds the bridge between human intuition and AI execution. It manifests complex logic as tactile dashboards, enabling a "Co-Creation" model where AI handles the heavy lifting while humans focus on strategy.
 - **Ever-Evolving Idea Bank**: The Lab acts as a non-stop inspiration factory. It continuously explores the boundaries of AI-native applications, ensuring your digital arsenal evolves as fast as your needs, providing a constant stream of bespoke solutions.
+- **Model Agnostic via OpenClaw**: While the project is optimized for Aider and Azure OpenAI, you can configure it to work with **any model** (Claude, GPT-4, etc.) supported by the OpenClaw ecosystem.
+- **Continuous Idle Generation**: You can register the generator as an OpenClaw service (e.g., `daily-app-lab-idle-generate`). This allows your terminal to automatically process your idea backlog and transform creativity into live App Demos whenever your system is idle.
 
 ---
 
