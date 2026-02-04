@@ -18,6 +18,7 @@ pnpm-debug.log*
 # Env
 .env
 .env.*
+!.env.example
 
 # Runtime / generated artifacts (keep local; do not commit)
 **/runtime/

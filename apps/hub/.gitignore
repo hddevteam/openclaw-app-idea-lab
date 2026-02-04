@@ -15,6 +15,7 @@ dist
 # Env
 .env
 .env.*
+!.env.example
 
 # OS
 .DS_Store
@@ -31,5 +32,9 @@ feedback
 .vite
 
 dist/
+
+# Do not commit Vite build artifacts accidentally copied into public/
+public/assets/
+public/index.html
 
 runtime/
