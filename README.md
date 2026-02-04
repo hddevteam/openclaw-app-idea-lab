@@ -3,7 +3,7 @@
 
 [![Status](https://img.shields.io/badge/Status-Active%20R%26D-blueviolet)](#)
 [![License](https://img.shields.io/badge/License-MIT-green)](#)
-[![Engine](https://img.shields.io/badge/Powered%20By-OpenClaw-orange)](https://github.com/openclaw)
+[![Engine](https://img.shields.io/badge/Powered%20By-OpenClaw-orange)](https://github.com/hddevteam/openclaw-app-idea-lab)
 
 **简体中文** [README.zh-CN.md](./README.zh-CN.md) | English
 
