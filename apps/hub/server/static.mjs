@@ -9,7 +9,7 @@ export function safeJoin(root, reqPath){
   return joined;
 }
 
-export async function serveFile(res, filePath, reqUrl){
+export async function serveFile(res, filePath, reqUrl, contentModifier){
   try {
     let fp = filePath;
     const stat = await fs.stat(fp);
@@ -22,7 +22,12 @@ export async function serveFile(res, filePath, reqUrl){
       fp = path.join(fp, 'index.html');
     }
     const ext = path.extname(fp);
-    const body = await fs.readFile(fp);
+    let body = await fs.readFile(fp);
+
+    if (contentModifier && (ext === '.html' || ext === '.htm')) {
+      body = contentModifier(body.toString('utf8'), fp);
+    }
+
     res.writeHead(200, { 'Content-Type': mime[ext] || 'application/octet-stream' });
     res.end(body);
   } catch {

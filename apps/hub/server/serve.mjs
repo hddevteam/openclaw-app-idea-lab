@@ -318,9 +318,17 @@ const server = http.createServer(async (req, res) => {
       : safeJoin(projectDir, rest || '/index.html');
       
     if(mapped) {
-      if(await serveFile(res, mapped, url)) return;
+      // For unbuilt projects (no dist), index.html often uses absolute paths like /src/...
+      // We need to either rewrite those to relative ./src/ or handle the mapping.
+      // We'll rewrite the HTML content on-the-fly for unbuilt projects.
+      const modifier = !useDist ? (html) => {
+        return html
+          .replace(/src="\/(src|node_modules|assets)\//g, 'src="./$1/')
+          .replace(/href="\/(src|node_modules|assets)\//g, 'href="./$1/');
+      } : null;
+
+      if(await serveFile(res, mapped, url, modifier)) return;
     }
-    // If we matched the prefix but file was not found, fall through to SPA fallback
   }
 
   // 2. SPA assets (must be checked before global fallthrough)
