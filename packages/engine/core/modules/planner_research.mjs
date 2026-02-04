@@ -15,6 +15,8 @@ const RAG_INDEX = path.join(DATA, 'rag_projects_index.json');
 const CLAW_CONFIG = process.env.CLAWDBOT_CONFIG || path.join(os.homedir(), '.openclaw', 'clawdbot.json');
 const TIMEOUT_MS = 180000; // 3 min total budget
 
+const LANG = process.env.DAILY_APP_LAB_LANG || 'zh-CN';
+
 // --- Agent Utils ---
 const sleep = (ms) => new Promise(resolve => setTimeout(resolve, ms));
 
@@ -99,7 +101,7 @@ async function callLLM(prompt, config, role = 'system') {
     body: JSON.stringify({
       model: model.id,
       messages: [
-        { role: 'system', content: 'You are an advanced creative agent. You specialize in "Combinatorial Innovation" - mixing disparate fields to create fresh digital tools.' },
+        { role: 'system', content: `You are an advanced creative agent. You specialize in "Combinatorial Innovation". All your written output and analysis MUST be in ${LANG}.` },
         { role: 'user', content: prompt }
       ],
       temperature: 0.85 // High creativity
@@ -180,7 +182,7 @@ async function phaseIdeate(researchContext, config) {
   Task:
   Generate 6 "Micro-App" ideas focusing on high-quality, professional, and "Juicy" interactions.
   
-  IMPORTANT: All fields in the JSON (title, hudScenario, output, mockDataStrategy, demoStartState, etc.) MUST be written in Simplified Chinese (zh-CN). The app names and descriptions should be natural and professional in a Chinese context.
+  IMPORTANT: All fields in the JSON (title, hudScenario, output, mockDataStrategy, demoStartState, etc.) MUST be written in ${LANG}. The app names and descriptions should be natural and professional in this language.
   
   Philosophy: "Simple, Fast, Tactile, Self-Contained".
   
@@ -202,11 +204,20 @@ async function phaseIdeate(researchContext, config) {
   [
     {
       "title": "...",
-      "hudScenario": "用户+动作+结果",
-      "output": "Copyable/Exportable result",
-      "coreInteractions": ["Swipe", "Drag", "Pinch"],
+      "hudScenario": "详细描述：[谁] 使用它来 [做什么] 并得到 [什么结果]",
+      "output": "Copyable/Exportable result (具体的输出格式描述)",
+      "coreInteractions": [
+        "描述性步骤1 (例如：拖拽时间轴滑块实时调整现金流缺口，并看到图表动态收缩反馈)",
+        "描述性步骤2 (例如：捏合手势切换保守/激进预测模型，阴影带随之扩张)",
+        "描述性步骤3..."
+      ],
+      "selfHealing": [
+        "增强鲁棒性方案1 (例如：当模拟数据产生极值导致溢出时，自动平滑曲线并提示修正)",
+        "增强鲁棒性方案2...",
+        "增强鲁棒性方案3..."
+      ],
       "keywords": ["ai", "productivity", "system", "network", "game", "design", "finance", "..."],
-      "mockDataStrategy": "How to fake it?",
+      "mockDataStrategy": "详细的本地 Mock 逻辑方案",
       "complexityBudget": {"minutes": 60, "screens": 2, "interactions": 3},
       "sources": [{"title": "source", "url": "..."}]
     }
@@ -226,14 +237,37 @@ async function phaseReflect(rawIdeasJson, config) {
   1. Is it too boring? (e.g. just a form). We want "Juicy" and "Tactile" apps.
   2. Is it too complex? (e.g. needs real backend).
   3. Category Alignment: Does at least one word in "keywords" match [ai, system, network, game, productivity]?
+  4. Detail check: "coreInteractions" and "selfHealing" must be descriptive sentences, not just single words or gestures.
   
-  IMPORTANT: The final output MUST be in Simplified Chinese (zh-CN).
+  IMPORTANT: The final output MUST be in ${LANG}.
 
   Action:
   - Keep the good ones.
   - REWRITE the boring ones to be more "Juicy" or "Interactive".
+  - ENRICH the sparse fields (especially coreInteractions and selfHealing) if they are too brief.
   - DISCARD the impossible ones.
   - Return the final filtered list as JSON.
+  `;
+  return callLLM(prompt, config.azure);
+}
+
+// Step 6: Summarize trends
+async function phaseSummarize(researchContext, config) {
+  console.log('[Agent:Phase5] Summarizing Trends...');
+  const prompt = `
+  Based on the following research context, generate a high-quality Markdown report highlighting the most interesting digital tool trends and opportunities for innovation.
+  
+  Research Context:
+  ${researchContext.slice(0, 5000)}
+  
+  Requirements:
+  1. Title should be "AI-Native Trends & Opportunities".
+  2. Language MUST be ${LANG}.
+  3. Focus on "Micro-Apps" and "Combinatorial Innovation".
+  4. Include 3-4 key trend pillars with brief descriptions.
+  5. Suggest 2-3 "Wildcard" ideas that bridge unexpected categories.
+  
+  Output ONLY the Markdown content.
   `;
   return callLLM(prompt, config.azure);
 }
@@ -247,11 +281,16 @@ async function main() {
   
   // 2. Research
   const researchContext = await phaseResearch(queries, config);
+
+  // 3. Summarize Trends
+  const trendsReport = await phaseSummarize(researchContext, config);
+  await fs.writeFile(TRENDS_REPORT, trendsReport);
+  console.log(`[Agent] Trends report updated: ${TRENDS_REPORT}`);
   
-  // 3. Ideate
+  // 4. Ideate
   const draftJson = await phaseIdeate(researchContext, config);
   
-  // 4. Reflect
+  // 5. Reflect
   const finalJsonRaw = await phaseReflect(draftJson, config);
   
   // Parse

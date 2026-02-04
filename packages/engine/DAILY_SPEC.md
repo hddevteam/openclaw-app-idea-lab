@@ -21,14 +21,13 @@ Every day generate a **different**, **interactive**, **elegant** app project (Vi
   - A "Copy Result" or "Export" button must be visible on the first screen.
   - The app must produce something the user can take away (text, image, JSON).
 
-### 1. Localization & Language
-- **Default Language**: **Simplified Chinese (zh-CN)** must be used for ALL user interface elements, including:
-  - Button labels, navigation items, and headers.
-  - Success/Error messages and tooltips.
-  - Generated mock data and simulation content.
+### 1. Localization & Language Consistency
+- **Full-Stack Localization**: All generated content must strictly use the language specified in the prompt. Ensure consistency across:
+  - All UI elements (labels, menus, headers, tooltips, and messages).
+  - All mock data, simulation content, and console logs.
   - The HUD scenario description.
-- **Character Support**: Ensure the chosen font stack supports Chinese characters gracefully on all platforms.
-- **README.md**: While the code comments can be in English, the user-facing documentation in README.md should ideally be bilingual or provide a Chinese summary.
+- **Character Support**: Ensure the chosen font stack and encoding support the target language characters (e.g., CJK) gracefully on all platforms.
+- **README.md**: The user-facing documentation (Overview, Features, Use Case) must be in the specified language, while technical comments in the code may remain in English.
 
 ### 2. Robustness & Self-Healing
 - **Error Boundaries**: Must include a runtime error boundary (React/Vue) or global `window.onerror` / `unhandledrejection` handler with user-friendly fallback UI.

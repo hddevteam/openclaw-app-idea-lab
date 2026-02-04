@@ -1,9 +1,10 @@
 import React, { useState } from 'react';
-import { ExternalLink, Trash2, Star, Calendar, ArrowRight, RotateCcw } from 'lucide-react';
+import { ExternalLink, Trash2, Star, Calendar, ArrowRight, RotateCcw, ChevronDown, ChevronUp, BookOpen, Fingerprint } from 'lucide-react';
 import { clsx } from 'clsx';
 import { ManifestEntry } from '../../types/manifest';
 import { Feedback } from '../../types/feedback';
 import { restoreIdea } from '../../lib/api';
+import ReactMarkdown from 'react-markdown';
 
 interface ProjectCardProps {
   entry: ManifestEntry;
@@ -14,6 +15,7 @@ interface ProjectCardProps {
 
 export const ProjectCard: React.FC<ProjectCardProps> = ({ entry, feedback, onRateClick, onDelete }) => {
   const [isDeleting, setIsDeleting] = useState(false);
+  const [showDetails, setShowDetails] = useState(false);
   const rating = feedback?.rating;
   const tags = feedback?.tags || {};
 
@@ -74,11 +76,48 @@ export const ProjectCard: React.FC<ProjectCardProps> = ({ entry, feedback, onRat
         </div>
       </div>
 
-      <div className="space-y-2 mb-6">
+      <div className="space-y-2 mb-4">
         <h3 className="text-lg font-bold leading-tight text-[#111] dark:text-[#f5f5f7] group-hover:text-blue-600 dark:group-hover:text-blue-400 transition-colors">{entry.title}</h3>
-        <p className="text-xs text-[#666] dark:text-[#86868b] line-clamp-2 leading-relaxed">
+        <p className="text-xs text-[#666] dark:text-[#86868b] line-clamp-3 leading-relaxed">
           {entry.desc || 'No description available for this experiment.'}
         </p>
+
+        {(entry.scenario || entry.workflow) && (
+          <button 
+            onClick={() => setShowDetails(!showDetails)}
+            className="flex items-center gap-1.5 text-[10px] font-bold text-blue-600 dark:text-blue-400 uppercase tracking-widest hover:underline mt-2"
+          >
+            {showDetails ? <ChevronUp size={12} /> : <ChevronDown size={12} />}
+            <span>{showDetails ? 'Hide details' : 'View Scenario & Workflow'}</span>
+          </button>
+        )}
+
+        {showDetails && (
+          <div className="mt-4 p-4 rounded-2xl bg-[#fafafa] dark:bg-[#151517] border border-[#f0f0f2] dark:border-[#2d2d2f] space-y-4 animate-in slide-in-from-top duration-300">
+            {entry.scenario && (
+              <div className="space-y-1.5">
+                <div className="flex items-center gap-1.5 text-[9px] font-bold text-gray-400 uppercase tracking-widest">
+                  <BookOpen size={10} />
+                  <span>Scenario</span>
+                </div>
+                <div className="text-[11px] leading-relaxed text-[#444] dark:text-[#d1d1d6] prose-xs dark:prose-invert">
+                  <ReactMarkdown>{entry.scenario}</ReactMarkdown>
+                </div>
+              </div>
+            )}
+            {entry.workflow && (
+              <div className="space-y-1.5">
+                <div className="flex items-center gap-1.5 text-[9px] font-bold text-gray-400 uppercase tracking-widest">
+                  <Fingerprint size={10} />
+                  <span>Workflow</span>
+                </div>
+                <div className="text-[11px] leading-relaxed text-[#444] dark:text-[#d1d1d6] prose-xs dark:prose-invert">
+                  <ReactMarkdown>{entry.workflow}</ReactMarkdown>
+                </div>
+              </div>
+            )}
+          </div>
+        )}
 
         {allTags.length > 0 && (
           <div className="flex flex-wrap gap-1 mt-2">

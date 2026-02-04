@@ -6,6 +6,7 @@ import { callAzureOpenAI, extractTextFromResponse } from './azure_openai_client.
 import { runPlannerResearch } from './research_runner.mjs';
 
 export async function handleIdeaGenerate(req, res, { labRuntime, labRoot }){
+  const LANG = process.env.DAILY_APP_LAB_LANG || 'zh-CN';
   let body='';
   req.on('data', c => body += c);
   await new Promise(r => req.on('end', r));
@@ -33,7 +34,7 @@ export async function handleIdeaGenerate(req, res, { labRuntime, labRoot }){
 
   const prompt = `You are a product planner for Daily App Lab.
 
-IMPORTANT: Output MUST be written in Simplified Chinese (zh-CN), except URLs.
+IMPORTANT: Output MUST be written in ${LANG}, except URLs.
 
 Goal:
 - Generate ${count} NEW micro-app/web tool ideas.
@@ -53,7 +54,7 @@ ${manifestRaw}
 Research sources (idea_sources.json):
 ${sourcesRaw}
 
-Return ONLY valid JSON with schema (all string fields must be zh-CN):
+Return ONLY valid JSON with schema (all string fields must be in ${LANG}):
 {
   "generatedAt": "...",
   "ideas": [

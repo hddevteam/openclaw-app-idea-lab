@@ -309,9 +309,41 @@ export function App() {
       </div>
 
       <div className="space-y-4 sm:space-y-6">
-        <section className="space-y-2">
-          <label className="text-[8px] sm:text-[10px] font-bold text-gray-400 uppercase tracking-widest block">Scenario & Workflow</label>
-          <p className="text-xs sm:text-sm font-medium leading-relaxed text-[#111] dark:text-[#f5f5f7]">{idea.hudScenario}</p>
+        <section className="space-y-4">
+          <div className="space-y-2">
+            <label className="text-[8px] sm:text-[10px] font-bold text-gray-400 uppercase tracking-widest block">Scenario</label>
+            <p className="text-xs sm:text-sm font-medium leading-relaxed text-[#111] dark:text-[#f5f5f7]">{idea.hudScenario}</p>
+          </div>
+          
+          {idea.coreInteractions?.length > 0 && (
+            <div className="space-y-3">
+              <label className="text-[8px] sm:text-[10px] font-bold text-gray-400 uppercase tracking-widest block">Workflow (Core Interactions)</label>
+              <ul className="space-y-2.5">
+                {idea.coreInteractions.map((ci, idx) => (
+                  <li key={idx} className="flex gap-3 items-start animate-in slide-in-from-left duration-300" style={{ animationDelay: `${idx * 100}ms` }}>
+                    <div className="flex-shrink-0 w-5 h-5 rounded-full bg-blue-50 dark:bg-blue-900/20 text-blue-600 dark:text-blue-400 flex items-center justify-center text-[10px] font-bold border border-blue-100 dark:border-blue-900/30 shadow-sm">
+                      {idx + 1}
+                    </div>
+                    <p className="text-xs sm:text-[13px] leading-relaxed text-[#444] dark:text-[#d1d1d6] font-medium pt-0.5">{ci}</p>
+                  </li>
+                ))}
+              </ul>
+            </div>
+          )}
+
+          {idea.selfHealing?.length > 0 && (
+            <div className="space-y-3">
+              <label className="text-[8px] sm:text-[10px] font-bold text-gray-400 uppercase tracking-widest block">Self-Healing Runtime</label>
+              <ul className="space-y-2.5">
+                {idea.selfHealing.map((sh, idx) => (
+                  <li key={idx} className="flex gap-3 items-start opacity-80">
+                    <div className="flex-shrink-0 w-1.5 h-1.5 rounded-full bg-green-500 mt-2" />
+                    <p className="text-xs leading-relaxed text-[#444] dark:text-[#d1d1d6] italic">{sh}</p>
+                  </li>
+                ))}
+              </ul>
+            </div>
+          )}
         </section>
 
         <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 sm:gap-4">

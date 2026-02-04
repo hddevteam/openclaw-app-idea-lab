@@ -2,6 +2,8 @@ export type ManifestEntry = {
   date: string;
   title: string;
   desc?: string;
+  scenario?: string;
+  workflow?: string;
   id?: string;
   indexPath?: string;
 };

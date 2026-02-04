@@ -30,3 +30,7 @@ pnpm-debug.log*
 
 # Local scratch
 .tmp/
+
+# AI / Developer Tools
+.aider*
+.aider/

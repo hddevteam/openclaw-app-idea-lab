@@ -43,6 +43,7 @@ async function getAzureConfig() {
 
 const MODEL = process.env.DAILY_APP_LAB_MODEL || 'azure/gpt-5.2';
 const AIDER = process.env.DAILY_APP_LAB_AIDER_BIN || 'aider';
+const LANG = process.env.DAILY_APP_LAB_LANG || 'zh-CN';
 
 const nowTag = () => {
   const d = new Date();
@@ -140,7 +141,7 @@ async function main() {
     scenario ? `- Scenario: ${scenario}` : null,
     `Requirements:`,
     `- Read and strictly follow ALL standards in DAILY_SPEC.md`,
-    `- Language: Use Simplified Chinese (zh-CN) for ALL UI text, labels, and content.`,
+    `- Language: Use ${LANG} for ALL UI text, labels, and content.`,
     `- Tech stack: ${chosenUI} + ${chosenStyling}`,
     `- Touch-friendly (tap/drag/pinch) + mouse`,
     `- Responsive + safe-area support`,

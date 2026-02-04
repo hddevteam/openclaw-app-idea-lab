@@ -25,6 +25,5 @@ dist-ssr
 
 outputs/
 runtime/
-.aider.chat.history.md
-.aider.input.history
+.aider*
 
