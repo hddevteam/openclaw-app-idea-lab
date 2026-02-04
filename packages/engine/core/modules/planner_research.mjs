@@ -19,13 +19,25 @@ const TIMEOUT_MS = 180000; // 3 min total budget
 const sleep = (ms) => new Promise(resolve => setTimeout(resolve, ms));
 
 async function loadConfig() {
-  const raw = await fs.readFile(CLAW_CONFIG, 'utf8');
-  const cfg = JSON.parse(raw);
-  const proxy = cfg.env?.vars?.https_proxy || cfg.env?.vars?.HTTPS_PROXY || 'http://127.0.0.1:7890';
+  const proxy = process.env.HTTPS_PROXY || process.env.HTTP_PROXY || 'http://127.0.0.1:7890';
   
   console.log(`[Config] Proxy: ${proxy}`);
   setGlobalDispatcher(new ProxyAgent(proxy));
 
+  if (process.env.AZURE_OPENAI_API_KEY && process.env.AZURE_OPENAI_ENDPOINT) {
+    return {
+      braveKey: process.env.BRAVE_API_KEY,
+      azure: {
+        baseUrl: process.env.AZURE_OPENAI_ENDPOINT,
+        apiKey: process.env.AZURE_OPENAI_API_KEY,
+        models: [{ id: 'gpt-5.2' }] // Standardizing on the model ID used in code
+      }
+    };
+  }
+
+  const raw = await fs.readFile(CLAW_CONFIG, 'utf8');
+  const cfg = JSON.parse(raw);
+  
   return {
     braveKey: cfg.tools?.web?.search?.apiKey || cfg.env?.vars?.BRAVE_API_KEY,
     azure: cfg.models?.providers?.['azure-openai'],

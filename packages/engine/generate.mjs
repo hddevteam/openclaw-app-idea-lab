@@ -16,6 +16,14 @@ const LOGS = path.join(RUNTIME, 'logs');
 
 // --- Azure Config Logic ---
 async function getAzureConfig() {
+  if (process.env.AZURE_OPENAI_API_KEY && process.env.AZURE_OPENAI_ENDPOINT) {
+    return {
+      baseUrl: process.env.AZURE_OPENAI_ENDPOINT,
+      apiKey: process.env.AZURE_OPENAI_API_KEY,
+      version: process.env.AZURE_OPENAI_API_VERSION || '2024-08-01-preview'
+    };
+  }
+
   try {
     const configPath = process.env.CLAWDBOT_CONFIG || path.join(os.homedir(), '.openclaw', 'clawdbot.json');
     const raw = await fs.readFile(configPath, 'utf8');

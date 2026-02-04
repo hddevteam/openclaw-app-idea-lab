@@ -1,6 +1,13 @@
 import fs from 'node:fs/promises';
 
 export async function readClawdbotAzureConfig(){
+  if (process.env.AZURE_OPENAI_API_KEY && process.env.AZURE_OPENAI_ENDPOINT) {
+    return {
+      baseUrl: process.env.AZURE_OPENAI_ENDPOINT,
+      apiKey: process.env.AZURE_OPENAI_API_KEY,
+    };
+  }
+
   const p = process.env.CLAWDBOT_CONFIG || `${process.env.HOME}/.clawdbot/clawdbot.json`;
   const raw = await fs.readFile(p, 'utf8');
   const j = JSON.parse(raw);
