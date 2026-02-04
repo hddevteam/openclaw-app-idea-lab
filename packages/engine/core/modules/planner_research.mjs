@@ -16,6 +16,7 @@ const CLAW_CONFIG = process.env.CLAWDBOT_CONFIG || path.join(os.homedir(), '.ope
 const TIMEOUT_MS = 180000; // 3 min total budget
 
 const LANG = process.env.DAILY_APP_LAB_LANG || 'zh-CN';
+const MODEL = process.env.DAILY_APP_LAB_MODEL || 'gpt-5.2';
 
 // --- Agent Utils ---
 const sleep = (ms) => new Promise(resolve => setTimeout(resolve, ms));
@@ -32,7 +33,7 @@ async function loadConfig() {
       azure: {
         baseUrl: process.env.AZURE_OPENAI_ENDPOINT,
         apiKey: process.env.AZURE_OPENAI_API_KEY,
-        models: [{ id: 'gpt-5.2' }] // Standardizing on the model ID used in code
+        models: [{ id: MODEL }] // Standardizing on the model ID used in code
       }
     };
   }
@@ -92,7 +93,7 @@ async function fetchPageContent(url) {
 // 3. LLM Tool
 async function callLLM(prompt, config, role = 'system') {
   const { baseUrl, apiKey, models } = config;
-  const model = models.find(m => m.id === 'gpt-5.2') || models[0];
+  const model = models.find(m => m.id === MODEL) || models[0];
   const url = `${baseUrl.replace(/\/+$/, '')}/chat/completions`;
   
   const res = await fetch(url, {

@@ -41,7 +41,7 @@ async function getAzureConfig() {
 }
 // --------------------------
 
-const MODEL = process.env.DAILY_APP_LAB_MODEL || 'azure/gpt-5.2';
+const MODEL = process.env.DAILY_APP_LAB_MODEL || 'gpt-5.2';
 const AIDER = process.env.DAILY_APP_LAB_AIDER_BIN || 'aider';
 const LANG = process.env.DAILY_APP_LAB_LANG || 'zh-CN';
 
@@ -178,7 +178,7 @@ async function main() {
     await fs.appendFile(logFile, `Using Azure AI config for Aider. Endpoint: ${cleanEndpoint}\n`).catch(()=>{});
   }
 
-  const modelArg = 'azure/gpt-5.2';
+  const modelArg = MODEL.includes('/') ? MODEL : `azure/${MODEL}`;
 
   // Run aider
   let aiderOk = false;

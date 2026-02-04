@@ -29,7 +29,7 @@ export async function handleIdeaGenerate(req, res, { labRuntime, labRoot }){
   const manifestRaw = await fs.readFile(path.join(labRuntime,'data','manifest.json'), 'utf8');
   const sourcesRaw = await fs.readFile(path.join(labRuntime,'data','idea_sources.json'), 'utf8');
 
-  const model = 'gpt-5.2';
+  const model = process.env.DAILY_APP_LAB_MODEL || 'gpt-5.2';
   const { baseUrl, apiKey } = await readClawdbotAzureConfig();
 
   const prompt = `You are a product planner for Daily App Lab.
