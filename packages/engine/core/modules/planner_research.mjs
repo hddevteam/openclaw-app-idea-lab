@@ -7,7 +7,7 @@ import { setGlobalDispatcher, ProxyAgent } from 'undici';
 import { isTooSimilar } from './rag_dedupe.mjs';
 
 const HERE = path.dirname(fileURLToPath(import.meta.url));
-const ROOT = path.resolve(process.env.DAILY_WEB_LAB_ROOT || path.resolve(HERE, '..', '..'));
+const ROOT = path.resolve(process.env.DAILY_APP_LAB_ROOT || path.resolve(HERE, '..', '..'));
 const DATA = path.join(ROOT, 'runtime', 'data');
 const BACKLOG = path.join(DATA, 'idea_backlog.json');
 const TRENDS_REPORT = path.join(DATA, 'trends_report.md');
@@ -162,7 +162,7 @@ async function phaseIdeate(researchContext, config) {
   console.log('[Agent:Phase3] Generating Concepts...');
   const currentYear = new Date().getFullYear();
   const prompt = `
-  Context from Web Research:
+  Context from App Research:
   ${researchContext.slice(0, 10000)}
 
   Task:

@@ -1,5 +1,5 @@
 export function unauthorized(res){
-  res.writeHead(401, { 'WWW-Authenticate': 'Basic realm="Daily Web Lab"' });
+  res.writeHead(401, { 'WWW-Authenticate': 'Basic realm="Daily App Lab"' });
   res.end('auth required');
 }
 

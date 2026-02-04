@@ -8,7 +8,7 @@ import { appendManifest } from './core/modules/manifest_update.mjs';
 import { markImplemented, unpickIdea } from './core/modules/idea_mark_implemented.mjs';
 
 const HERE = path.dirname(fileURLToPath(import.meta.url));
-const ROOT = path.resolve(process.env.DAILY_WEB_LAB_ROOT || HERE);
+const ROOT = path.resolve(process.env.DAILY_APP_LAB_ROOT || HERE);
 const RUNTIME = path.join(ROOT, 'runtime');
 const DATA = path.join(RUNTIME, 'data');
 const OUTPUTS = path.join(ROOT, 'outputs');
@@ -33,8 +33,8 @@ async function getAzureConfig() {
 }
 // --------------------------
 
-const MODEL = process.env.DAILY_WEB_LAB_MODEL || 'azure/gpt-5.2';
-const AIDER = process.env.DAILY_WEB_LAB_AIDER_BIN || 'aider';
+const MODEL = process.env.DAILY_APP_LAB_MODEL || 'azure/gpt-5.2';
+const AIDER = process.env.DAILY_APP_LAB_AIDER_BIN || 'aider';
 
 const nowTag = () => {
   const d = new Date();
@@ -114,7 +114,7 @@ async function main() {
     await fs.appendFile(logFile, `Auto-loaded idea from queue: ${idea.title || idea.id}\n`).catch(()=>{});
   }
 
-  const title = idea?.title || idea?.name || 'Extra interactive web project';
+  const title = idea?.title || idea?.name || 'Extra interactive app project';
   const scenario = idea?.scenario || idea?.hudScenario || idea?.desc || idea?.description || '';
   const ideaId = idea?.id;
 
@@ -127,7 +127,7 @@ async function main() {
 
     const specPath = path.join(ROOT, 'DAILY_SPEC.md');
     const msg = [
-    `Act as an expert web developer. Create a creative web page or utility based on this context:`,
+    `Act as an expert app developer. Create a creative web page or utility based on this context:`,
     `- Project: ${title}`,
     scenario ? `- Scenario: ${scenario}` : null,
     `Requirements:`,

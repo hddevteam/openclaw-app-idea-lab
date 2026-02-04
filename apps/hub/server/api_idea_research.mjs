@@ -10,7 +10,7 @@ export async function handleIdeaResearch(req, res, { labRoot }) {
   
   const child = spawn('node', [scriptPath], {
     cwd: labRoot,
-    env: { ...process.env, DAILY_WEB_LAB_ROOT: labRoot }
+    env: { ...process.env, DAILY_APP_LAB_ROOT: labRoot }
   });
 
   let stdout = '';

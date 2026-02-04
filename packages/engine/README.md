@@ -25,7 +25,7 @@ Bypasses idle gates and daily limits to generate the next item (or priority item
 ```
 
 ### 2. Background Automation
-Operates as a macOS LaunchAgent (`ai.dailyweblab.idle`). It periodically scans for system idle time to generate new experiments without user intervention.
+Operates as a macOS LaunchAgent (`ai.dailyapplab.idle`). It periodically scans for system idle time to generate new experiments without user intervention.
 
 ### 3. Smart Counting
 Daily limits are now calculated based on **actually existing directories** in `outputs/`. Deleting a project automatically recovers your daily generation quota.

@@ -1,7 +1,7 @@
 # OpenClaw Engine — Daily Plan Spec
 
 ## Goal
-Every day generate a **different**, **interactive**, **elegant** web project (Vite) that showcases **one or more** of these skill themes:
+Every day generate a **different**, **interactive**, **elegant** app project (Vite) that showcases **one or more** of these skill themes:
 
 - **System** (filesystem/process/resource visualization, local info, simulated OS concepts)
 - **Network** (request/latency visualization, WebSocket demo, packet-flow simulation, offline-first/cache)

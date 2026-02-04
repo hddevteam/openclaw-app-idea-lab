@@ -2,7 +2,7 @@
 set -euo pipefail
 
 SCRIPT_DIR0="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
-PROJECT_ROOT="${DAILY_WEB_LAB_ROOT:-$(cd "$SCRIPT_DIR0/../.." && pwd)}"
+PROJECT_ROOT="${DAILY_APP_LAB_ROOT:-$(cd "$SCRIPT_DIR0/../.." && pwd)}"
 SCRIPT_DIR="$PROJECT_ROOT/core/scripts"
 cd "$PROJECT_ROOT"
 
@@ -17,7 +17,7 @@ MONO_ROOT="$(cd "$PROJECT_ROOT/../.." && pwd)"
 [ -f "$MONO_ROOT/.env" ] && source "$MONO_ROOT/.env" || true
 set +a
 
-MAX_PER_DAY=${DAILY_WEB_LAB_MAX_PER_DAY:-10}
+MAX_PER_DAY=${DAILY_APP_LAB_MAX_PER_DAY:-10}
 TODAY=$(date +%F)
 LOG_DIR="$PROJECT_ROOT/runtime/logs"
 mkdir -p "$LOG_DIR"

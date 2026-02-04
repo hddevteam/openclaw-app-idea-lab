@@ -5,13 +5,13 @@ import 'dotenv/config';
 import { isTooSimilar } from './rag_dedupe.mjs';
 
 const HERE = path.dirname(fileURLToPath(import.meta.url));
-const ROOT = path.resolve(process.env.DAILY_WEB_LAB_ROOT || path.resolve(HERE, '..', '..'));
+const ROOT = path.resolve(process.env.DAILY_APP_LAB_ROOT || path.resolve(HERE, '..', '..'));
 const DATA = path.join(ROOT, 'runtime', 'data');
 const BACKLOG = path.join(DATA, 'idea_backlog.json');
 const QUEUE = path.join(DATA, 'idea_queue.json');
 const RAG_INDEX = path.join(DATA, 'rag_projects_index.json');
 
-const THRESH = Number(process.env.DAILY_WEB_LAB_RAG_SIM_THRESHOLD || 0.72);
+const THRESH = Number(process.env.DAILY_APP_LAB_RAG_SIM_THRESHOLD || 0.72);
 
 function pickCandidate(items) {
   // Prefer new/ready ideas; tolerate renamed schemas.

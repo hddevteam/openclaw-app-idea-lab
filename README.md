@@ -25,7 +25,7 @@ Welcome to the **OpenClaw App Idea Lab**, the single source of truth (SSOT) for 
 ## 配置
 
 把根目录的 `.env.example` 复制为 `.env` 并按需填写（可选）：
-- `DAILY_WEB_LAB_USER / DAILY_WEB_LAB_PASS`：Hub 的 basic auth
-- `DAILY_WEB_LAB_PORT`：Hub 端口
-- `DAILY_WEB_LAB_ROOT`：手动指定 engine 根目录（通常不需要）
+- `DAILY_APP_LAB_USER / DAILY_APP_LAB_PASS`：Hub 的 basic auth
+- `DAILY_APP_LAB_PORT`：Hub 端口
+- `DAILY_APP_LAB_ROOT`：手动指定 engine 根目录（通常不需要）
 
