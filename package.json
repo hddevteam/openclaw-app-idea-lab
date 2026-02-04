@@ -10,5 +10,8 @@
     "serve:hub": "npm --workspace ./apps/hub run hub:serve",
     "build": "npm -ws run build --if-present",
     "lint": "npm -ws run lint --if-present"
+  },
+  "dependencies": {
+    "dotenv": "^17.2.3"
   }
 }

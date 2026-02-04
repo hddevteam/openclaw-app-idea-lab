@@ -2,6 +2,7 @@ import fs from 'node:fs/promises';
 import path from 'node:path';
 import os from 'node:os';
 import { fileURLToPath } from 'node:url';
+import 'dotenv/config';
 import { setGlobalDispatcher, ProxyAgent } from 'undici';
 import { isTooSimilar } from './rag_dedupe.mjs';
 

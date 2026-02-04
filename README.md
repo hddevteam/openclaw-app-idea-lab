@@ -1,4 +1,6 @@
-# openclaw-app-idea-lab
+# OpenClaw App Idea Lab
+
+Welcome to the **OpenClaw App Idea Lab**, the single source of truth (SSOT) for our AI-driven application ecosystem. This monorepo consolidates the Hub (dashboard) and the Engine (generator) into a unified development environment.
 
 一个 monorepo，把 **Daily App Hub（控制台）** 和 **Daily Idea Lab Engine（生成引擎）** 集成在同一个仓库里，方便开源与协作。
 

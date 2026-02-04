@@ -12,6 +12,9 @@ export PATH="$HOME/.npm-global/bin:$HOME/Library/Python/3.11/bin:/opt/homebrew/b
 # env
 set -a
 [ -f "$PROJECT_ROOT/.env" ] && source "$PROJECT_ROOT/.env" || true
+# Also source from monorepo root if exists
+MONO_ROOT="$(cd "$PROJECT_ROOT/../.." && pwd)"
+[ -f "$MONO_ROOT/.env" ] && source "$MONO_ROOT/.env" || true
 set +a
 
 MAX_PER_DAY=${DAILY_WEB_LAB_MAX_PER_DAY:-10}

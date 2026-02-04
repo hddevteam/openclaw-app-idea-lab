@@ -1,5 +1,5 @@
 {
-  "name": "daily-idea-lab",
+  "name": "@openclaw/engine",
   "private": true,
   "version": "0.0.0",
   "type": "module",

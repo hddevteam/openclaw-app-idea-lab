@@ -1,6 +1,6 @@
 # Daily App Hub 🚀
 
-The central **Cockpit** for the Daily App Lab ecosystem. This dashboard manages the entire lifecycle of daily experiments, providing the UI and API orchestration for the [Daily Idea Lab Engine](../daily-idea-lab).
+The central **Cockpit** for the Daily App Lab ecosystem. This dashboard manages the entire lifecycle of daily experiments, providing the UI and API orchestration for the [Daily Idea Lab Engine](../../packages/engine).
 
 ## 🌟 Key Features
 

@@ -1,4 +1,4 @@
-# Daily Idea Lab — Daily Plan Spec
+# OpenClaw Engine — Daily Plan Spec
 
 ## Goal
 Every day generate a **different**, **interactive**, **elegant** web project (Vite) that showcases **one or more** of these skill themes:
