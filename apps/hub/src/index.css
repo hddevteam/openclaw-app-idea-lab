@@ -1,0 +1,76 @@
+@import "tailwindcss";
+
+:root {
+  --bg: #fbfbfd;
+  --fg: #111111;
+  --mut: #666666;
+  --hair: #e5e5e7;
+  --card: #ffffff;
+  --accent: #0071e3;
+  --accent-soft: rgba(0, 113, 227, 0.1);
+  --success: #34c759;
+  --warning: #ff9500;
+  --error: #ff3b30;
+  --radius: 14px;
+}
+
+@media (prefers-color-scheme: dark) {
+  :root {
+    --bg: #000000;
+    --fg: #f5f5f7;
+    --mut: #86868b;
+    --hair: #2d2d2f;
+    --card: #1c1c1e;
+  }
+}
+
+* {
+  box-sizing: border-box;
+}
+
+html, body {
+  height: 100%;
+  margin: 0;
+  padding: 0;
+  font-family: -apple-system, BlinkMacSystemFont, "SF Pro Text", "Myriad Set Pro", "SF Pro Icons", "Apple Legacy Chevron", "Helvetica Neue", "Helvetica", "Arial", sans-serif;
+  background: var(--bg);
+  color: var(--fg);
+  -webkit-font-smoothing: antialiased;
+}
+
+#root {
+  min-height: 100%;
+}
+
+button {
+  cursor: pointer;
+  transition: all 0.2s ease;
+}
+
+button:active {
+  transform: scale(0.98);
+}
+
+.glass {
+  background: rgba(255, 255, 255, 0.72);
+  backdrop-filter: blur(20px);
+  -webkit-backdrop-filter: blur(20px);
+  border: 1px solid var(--hair);
+}
+
+@media (prefers-color-scheme: dark) {
+  .glass {
+    background: rgba(28, 28, 30, 0.72);
+  }
+}
+
+.skeleton {
+  background: linear-gradient(90deg, var(--hair) 25%, var(--bg) 50%, var(--hair) 75%);
+  background-size: 200% 100%;
+  animation: skeleton-loading 1.5s infinite;
+}
+
+@keyframes skeleton-loading {
+  0% { background-position: 200% 0; }
+  100% { background-position: -200% 0; }
+}

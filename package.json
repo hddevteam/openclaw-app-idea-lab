@@ -1,0 +1,14 @@
+{
+  "name": "openclaw-app-idea-lab",
+  "private": true,
+  "workspaces": [
+    "apps/*",
+    "packages/*"
+  ],
+  "scripts": {
+    "dev:hub": "npm --workspace ./apps/hub run dev",
+    "serve:hub": "npm --workspace ./apps/hub run hub:serve",
+    "build": "npm -ws run build --if-present",
+    "lint": "npm -ws run lint --if-present"
+  }
+}
