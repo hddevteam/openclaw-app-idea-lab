@@ -30,6 +30,7 @@ The magic happens when the **App Idea Lab** meets the **OpenClaw** agent ecosyst
 - **Ever-Evolving Idea Bank**: The Lab acts as a non-stop inspiration factory. It continuously explores the boundaries of AI-native applications, ensuring your digital arsenal evolves as fast as your needs, providing a constant stream of bespoke solutions.
 - **Model Agnostic via OpenClaw**: While the project is optimized for Aider and Azure OpenAI, you can configure it to work with **any model** (Claude, GPT-4, etc.) supported by the OpenClaw ecosystem.
 - **Continuous Idle Generation**: You can register the generator as an OpenClaw service (e.g., `daily-app-lab-idle-generate`). This allows your terminal to automatically process your idea backlog and transform creativity into live App Demos whenever your system is idle.
+    - **Logic**: The [`run_idle_job.sh`](./packages/engine/core/scripts/run_idle_job.sh) script coordinates the workflow: it checks if the Mac has been idle for 10+ minutes (via `idle_gate.sh`), verifies daily limits, picks a prioritized idea from the backlog via `backlog_pick_pm.mjs`, and triggers the build engine.
 
 ---
 

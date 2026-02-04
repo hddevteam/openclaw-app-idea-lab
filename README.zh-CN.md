@@ -30,6 +30,7 @@
 -   **持续进化的创意库**：Idea Lab 是一个永不停歇的灵感工厂。It 不断探索 AI 原生应用的可能性，为用户提供源源不断的工具选择，让每个人的工作流都能根据实时需求快速进化。
 -   **OpenClaw 模型中立**：虽然本项目默认基于 Aider 和 Azure OpenAI 开发，但通过 **OpenClaw** 的集成，你可以灵活配置并使用**任何主流或私有模型**。
 -   **空闲自动化生成**：你可以将生成脚本配置为 OpenClaw 的后台服务（例如 `daily-app-lab-idle-generate`）。这使得你的终端能在系统空闲时自动消耗积压的创意，持续将其转化为可运行的 App Demo。
+    -   **核心机制**：该功能由 [`run_idle_job.sh`](./packages/engine/core/scripts/run_idle_job.sh) 协调。它会自动检测 Mac 是否已空闲超过 10 分钟（通过 `idle_gate.sh`），检查每日生成上限，并通过 `backlog_pick_pm.mjs` 从积压库中挑选最高优先级的创意触发构建。
 
 ---
 
