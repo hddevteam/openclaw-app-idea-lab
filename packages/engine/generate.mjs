@@ -41,7 +41,7 @@ async function getAzureConfig() {
 }
 // --------------------------
 
-const MODEL = process.env.DAILY_APP_LAB_MODEL || 'gpt-5.2';
+const MODEL = process.env.AZURE_OPENAI_MODEL || 'gpt-5.2';
 const AIDER = process.env.DAILY_APP_LAB_AIDER_BIN || 'aider';
 const LANG = process.env.DAILY_APP_LAB_LANG || 'zh-CN';
 

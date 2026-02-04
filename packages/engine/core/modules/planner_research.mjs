@@ -16,7 +16,7 @@ const CLAW_CONFIG = process.env.CLAWDBOT_CONFIG || path.join(os.homedir(), '.ope
 const TIMEOUT_MS = 180000; // 3 min total budget
 
 const LANG = process.env.DAILY_APP_LAB_LANG || 'zh-CN';
-const MODEL = process.env.DAILY_APP_LAB_MODEL || 'gpt-5.2';
+const MODEL = process.env.AZURE_OPENAI_MODEL || 'gpt-5.2';
 
 // --- Agent Utils ---
 const sleep = (ms) => new Promise(resolve => setTimeout(resolve, ms));
