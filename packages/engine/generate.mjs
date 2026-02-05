@@ -35,7 +35,7 @@ async function getAzureConfig() {
       apiKey: az.apiKey,
       version: '2024-08-01-preview' // default version
     };
-  } catch (e) {
+  } catch (_e) {
     return null;
   }
 }
@@ -101,7 +101,9 @@ async function writeBuildStatus(status, details = {}) {
       ...details,
       updatedAt: new Date().toISOString()
     }, null, 2));
-  } catch (e) {}
+  } catch (_e) {
+    // Silently ignore status update errors
+  }
 }
 
 async function main() {
@@ -181,7 +183,6 @@ async function main() {
   const modelArg = MODEL.includes('/') ? MODEL : `azure/${MODEL}`;
 
   // Run aider
-  let aiderOk = false;
   try {
     await run(AIDER, [
       '--model', modelArg,
@@ -194,7 +195,6 @@ async function main() {
       '--no-attribute-committer',
       '--message', msg,
     ], { cwd: outDir, logFile, env: aiderEnv });
-    aiderOk = true;
   } catch (e) {
     // Detect common "bad output" causes (token limit, content filter, missing key)
     const msg = String(e?.message || e);
@@ -231,7 +231,9 @@ async function main() {
     if (await exists(outDir)) {
       await fs.rm(outDir, { recursive: true, force: true });
     }
-  } catch (rmErr) {}
+  } catch (_rmErr) {
+    // Ignore cleanup errors
+  }
   throw e;
 }
 }

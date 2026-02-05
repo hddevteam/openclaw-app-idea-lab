@@ -13,7 +13,6 @@ const BACKLOG = path.join(DATA, 'idea_backlog.json');
 const TRENDS_REPORT = path.join(DATA, 'trends_report.md');
 const RAG_INDEX = path.join(DATA, 'rag_projects_index.json');
 const CLAW_CONFIG = process.env.CLAWDBOT_CONFIG || path.join(os.homedir(), '.openclaw', 'clawdbot.json');
-const TIMEOUT_MS = 180000; // 3 min total budget
 
 const LANG = process.env.DAILY_APP_LAB_LANG || 'zh-CN';
 const MODEL = process.env.AZURE_OPENAI_MODEL || 'gpt-5.2';
@@ -91,7 +90,7 @@ async function fetchPageContent(url) {
 }
 
 // 3. LLM Tool
-async function callLLM(prompt, config, role = 'system') {
+async function callLLM(prompt, config, _role = 'system') {
   const { baseUrl, apiKey, models } = config;
   const model = models.find(m => m.id === MODEL) || models[0];
   const url = `${baseUrl.replace(/\/+$/, '')}/chat/completions`;
@@ -175,7 +174,6 @@ async function phaseResearch(queries, config) {
 // Step 4: Ideate
 async function phaseIdeate(researchContext, config) {
   console.log('[Agent:Phase3] Generating Concepts...');
-  const currentYear = new Date().getFullYear();
   const prompt = `
   Context from App Research:
   ${researchContext.slice(0, 10000)}
