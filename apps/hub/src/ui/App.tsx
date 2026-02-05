@@ -8,7 +8,6 @@ import {
   fetchTrendsReport,
   generateIdeas, 
   runResearch,
-  saveFeedback, 
   saveToQueue,
   prioritizeAndExecute,
   restoreIdeaStatus,
@@ -21,9 +20,9 @@ import { NavBar } from './components/NavBar';
 import { ProjectCard } from './components/ProjectCard';
 import { FeedbackModal } from './components/FeedbackModal';
 import { BuildProgress } from './components/BuildProgress';
-import { HUD } from './components/HUD';
+
 import { IdeaCard } from './components/IdeaCard';
-import { LayoutGrid, History, Calendar, CheckCircle2, Save, Trash2, X, AlertCircle, Loader2, ChevronRight, Search, SortAsc, BookOpen, BrainCircuit } from 'lucide-react';
+import { LayoutGrid, History, Calendar, CheckCircle2, Save, Trash2, X, AlertCircle, Loader2, Search, SortAsc, BookOpen, BrainCircuit } from 'lucide-react';
 import { clsx } from 'clsx';
 import ReactMarkdown from 'react-markdown';
 
@@ -85,8 +84,8 @@ export function App() {
         const map: Record<string, Feedback | undefined> = {};
         for (const [d, f] of pairs) map[d] = f;
         setFeedbacks(map);
-      } catch (e) {
-        setErr(String((e as any)?.message || e));
+      } catch (e: unknown) {
+        setErr(String((e as Error)?.message || e));
       }
     })();
   }, []);
@@ -106,22 +105,22 @@ export function App() {
       ]);
       setIdeas(list);
       setTrendsReport(report);
-    } catch (err) {
+    } catch (_err) {
       showToast('Failed to load ideas', 'error');
     } finally {
       setLoading(false);
     }
   };
 
-  const handleGenerate = async (prefs: any) => {
+  const handleGenerate = async (prefs: { themes: string[]; form: string; strictness: number }) => {
     setLoading(true);
     try {
       const list = await generateIdeas(prefs);
       showToast(`Generated ${list.length} ideas`);
       setIdeas(list);
       setLabView('backlog');
-    } catch (err: any) {
-      showToast(err.message || 'Generation failed', 'error');
+    } catch (err: unknown) {
+      showToast((err as Error).message || 'Generation failed', 'error');
     } finally {
       setLoading(false);
     }
@@ -138,8 +137,8 @@ export function App() {
       } else {
         showToast(res.message || 'Research failed', 'error');
       }
-    } catch (err: any) {
-      showToast(err.message || 'Research failed', 'error');
+    } catch (err: unknown) {
+      showToast((err as Error).message || 'Research failed', 'error');
     } finally {
       setIsResearching(false);
       setLoading(false);
@@ -151,8 +150,8 @@ export function App() {
     try {
       await saveToQueue(idea);
       showToast('Saved to idea_queue.json');
-    } catch (err: any) {
-      showToast(err.message || 'Save failed', 'error');
+    } catch (err: unknown) {
+      showToast((err as Error).message || 'Save failed', 'error');
     } finally {
       setIsSaving(false);
     }
@@ -163,8 +162,8 @@ export function App() {
     try {
       await prioritizeAndExecute(id);
       showToast('Prioritized! Generation started in background.');
-    } catch (err: any) {
-      showToast(err.message || 'Action failed', 'error');
+    } catch (err: unknown) {
+      showToast((err as Error).message || 'Action failed', 'error');
     } finally {
       setIsPrioritizing(false);
     }
@@ -183,8 +182,8 @@ export function App() {
       setIdeas(prev => prev.filter(i => i.id !== id));
       setSelectedId(null);
       showToast('Restored to Backlog');
-    } catch (err: any) {
-      showToast(err.message || 'Restore failed', 'error');
+    } catch (err: unknown) {
+      showToast((err as Error).message || 'Restore failed', 'error');
     } finally {
       setIsRestoring(false);
     }
@@ -197,7 +196,7 @@ export function App() {
       setIdeas(prev => prev.filter(i => i.id !== id));
       if (selectedId === id) setSelectedId(null);
       showToast('Deleted successfully');
-    } catch (err) {
+    } catch (_err) {
       showToast('Delete failed', 'error');
     }
   };
@@ -218,8 +217,8 @@ export function App() {
       setBatchIds(new Set());
       setIsBatchMode(false);
       showToast(`Deleted ${j.count || idsArr.length} ideas`);
-    } catch (err: any) {
-      showToast(err.message || 'Batch delete failed', 'error');
+    } catch (err: unknown) {
+      showToast((err as Error).message || 'Batch delete failed', 'error');
     } finally {
       setLoading(false);
     }
@@ -658,6 +657,19 @@ export function App() {
         initialDate={fbDate}
         onSaved={(date, fb) => setFeedbacks((m) => ({ ...m, [date]: fb }))}
       />
+      
+      <footer className="mt-20 pb-12 text-center space-y-2 opacity-40 hover:opacity-100 transition-opacity">
+        <p className="text-[10px] font-bold tracking-widest uppercase text-gray-500 dark:text-gray-400">Version 0.1.0</p>
+        <a 
+          href="https://hddevteam.github.io/openclaw-app-idea-lab/" 
+          target="_blank" 
+          rel="noopener noreferrer"
+          className="text-[10px] font-medium text-gray-500 dark:text-gray-400 hover:text-blue-600 dark:hover:text-blue-400 transition-colors underline underline-offset-4"
+        >
+          hddevteam.github.io/openclaw-app-idea-lab
+        </a>
+      </footer>
+
       <BuildProgress />
     </div>
   );
