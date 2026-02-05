@@ -3,7 +3,8 @@ import { Sparkles, MessageSquare, History, FilterX, Settings2, Loader2, X } from
 import { clsx } from 'clsx';
 
 interface LabPrefs {
-  themes: string[];
+  categories: string[];
+  styles: string[];
   form: string;
   strictness: number;
 }
@@ -36,19 +37,32 @@ export const NavBar: React.FC<NavBarProps> = ({
 }) => {
   const [isExpanded, setIsExpanded] = useState(false);
   const [prefs, setPrefs] = useState<LabPrefs>({
-    themes: ['ai', 'system', 'network'],
-    form: 'tool',
+    categories: ['Utilities'],
+    styles: ['Tactile', 'Glassmorphism'],
+    form: 'ui-template',
     strictness: 0.78
   });
 
-  const handleToggleTheme = (theme: string) => {
+  const handleToggleCategory = (cat: string) => {
     setPrefs(p => ({
       ...p,
-      themes: p.themes.includes(theme) 
-        ? p.themes.filter(t => t !== theme) 
-        : [...p.themes, theme]
+      categories: p.categories.includes(cat) 
+        ? p.categories.filter(t => t !== cat) 
+        : [...p.categories, cat]
     }));
   };
+
+  const handleToggleStyle = (style: string) => {
+    setPrefs(p => ({
+      ...p,
+      styles: p.styles.includes(style) 
+        ? p.styles.filter(t => t !== style) 
+        : [...p.styles, style]
+    }));
+  };
+
+  const CATEGORIES = ['Utilities', 'Productivity', 'Finance', 'Health', 'Design', 'Photo & Video', 'Games', 'Education'];
+  const STYLES = ['Tactile', 'Glassmorphism', 'Neumorphism', 'Bento Box', 'Cyberpunk', 'Gamified', 'Physics', '3D Parallax'];
 
   return (
     <nav className="sticky top-2 sm:top-4 mx-auto w-[98%] max-w-[1000px] z-[2000] mb-4 sm:mb-8 space-y-1">
@@ -189,56 +203,81 @@ export const NavBar: React.FC<NavBarProps> = ({
 
         {/* Expanded Settings */}
         {activeTab === 'lab' && isExpanded && (
-          <div className="px-4 sm:px-8 py-4 sm:py-6 border-t border-[#f5f5f7] dark:border-[#2d2d2f] bg-[#fafafa] dark:bg-[#151517] flex flex-wrap gap-6 sm:gap-12 animate-in slide-in-from-top duration-300">
-            <div className="space-y-3 min-w-0 flex-1 sm:flex-none">
-              <label className="text-[11px] font-bold text-gray-400 uppercase tracking-widest">Themes</label>
-              <div className="flex flex-wrap gap-2 sm:gap-2.5">
-                {['ai', 'system', 'network', 'game', 'productivity'].map(t => (
-                  <button
-                    key={t}
-                    onClick={() => handleToggleTheme(t)}
-                    className={clsx(
-                      "px-3 sm:px-4 py-1.5 rounded-lg border text-[10px] sm:text-xs font-bold capitalize transition-all",
-                      prefs.themes.includes(t) 
-                        ? "bg-blue-50 dark:bg-blue-900/20 border-blue-500 text-blue-600 dark:text-blue-400" 
-                        : "border-[#e5e5e7] dark:border-[#2d2d2f] text-gray-400"
-                    )}
-                  >
-                    {t}
-                  </button>
-                ))}
+          <div className="px-4 sm:px-8 py-4 sm:py-6 border-t border-[#f5f5f7] dark:border-[#2d2d2f] bg-[#fafafa] dark:bg-[#151517] space-y-6 animate-in slide-in-from-top duration-300">
+            <div className="flex flex-wrap gap-6 sm:gap-12">
+              <div className="space-y-3 min-w-0 flex-1">
+                <label className="text-[10px] font-bold text-gray-400 uppercase tracking-widest">Categories (Apple App Store)</label>
+                <div className="flex flex-wrap gap-2">
+                  {CATEGORIES.map(c => (
+                    <button
+                      key={c}
+                      onClick={() => handleToggleCategory(c)}
+                      className={clsx(
+                        "px-3 py-1.5 rounded-lg border text-[10px] font-bold transition-all",
+                        prefs.categories.includes(c) 
+                          ? "bg-blue-600 border-blue-600 text-white shadow-md shadow-blue-500/20" 
+                          : "border-[#e5e5e7] dark:border-[#2d2d2f] text-gray-400 hover:border-gray-400"
+                      )}
+                    >
+                      {c}
+                    </button>
+                  ))}
+                </div>
+              </div>
+
+              <div className="space-y-3">
+                <label className="text-[10px] font-bold text-gray-400 uppercase tracking-widest">Product Form</label>
+                <select 
+                  value={prefs.form}
+                  onChange={e => setPrefs(p => ({ ...p, form: e.target.value }))}
+                  className="block min-w-[140px] px-4 py-2 rounded-lg border border-[#e5e5e7] dark:border-[#2d2d2f] bg-white dark:bg-[#1c1c1e] text-xs font-bold focus:ring-2 focus:ring-blue-500 transition-all outline-none shadow-sm"
+                >
+                  <option value="ui-template">UI Template (Interaction)</option>
+                  <option value="tool">Micro Tool</option>
+                  <option value="component">Component Prototype</option>
+                  <option value="simulator">Simulation/Viz</option>
+                </select>
               </div>
             </div>
 
-            <div className="space-y-3">
-              <label className="text-[11px] font-bold text-gray-400 uppercase tracking-widest">Form</label>
-              <select 
-                value={prefs.form}
-                onChange={e => setPrefs(p => ({ ...p, form: e.target.value }))}
-                className="block min-w-[120px] px-4 py-2 rounded-lg border border-[#e5e5e7] dark:border-[#2d2d2f] bg-white dark:bg-[#1c1c1e] text-xs font-bold focus:ring-2 focus:ring-blue-500 transition-all outline-none"
-              >
-                <option value="tool">Tool</option>
-                <option value="viz">Visualization</option>
-                <option value="mini-app">Mini-app</option>
-              </select>
-            </div>
-
-            <div className="space-y-3">
-              <label className="text-[11px] font-bold text-gray-400 uppercase tracking-widest">Similarity Strictness</label>
-              <div className="flex items-center gap-4">
-                <input 
-                  type="range" min="0.5" max="0.9" step="0.01"
-                  value={prefs.strictness}
-                  onChange={e => setPrefs(p => ({ ...p, strictness: parseFloat(e.target.value) }))}
-                  className="w-40 h-1.5 bg-gray-200 dark:bg-gray-700 rounded-lg appearance-none cursor-pointer accent-blue-600"
-                />
-                <span className="text-xs font-mono font-bold text-blue-600">{prefs.strictness.toFixed(2)}</span>
+            <div className="flex flex-wrap gap-6 sm:gap-12 pt-2">
+              <div className="space-y-3 min-w-0 flex-1">
+                <label className="text-[10px] font-bold text-gray-400 uppercase tracking-widest">Vibes & Effects (Tactile First)</label>
+                <div className="flex flex-wrap gap-2">
+                  {STYLES.map(s => (
+                    <button
+                      key={s}
+                      onClick={() => handleToggleStyle(s)}
+                      className={clsx(
+                        "px-3 py-1.5 rounded-lg border text-[10px] font-bold transition-all",
+                        prefs.styles.includes(s) 
+                          ? "bg-orange-500 border-orange-500 text-white shadow-md shadow-orange-500/20" 
+                          : "border-[#e5e5e7] dark:border-[#2d2d2f] text-gray-400 hover:border-gray-400"
+                      )}
+                    >
+                      {s}
+                    </button>
+                  ))}
+                </div>
               </div>
+
+              <div className="space-y-3">
+                <label className="text-[10px] font-bold text-gray-400 uppercase tracking-widest">Similarity Strictness</label>
+                <div className="flex items-center gap-4">
+                  <input 
+                    type="range" min="0.5" max="0.9" step="0.01"
+                    value={prefs.strictness}
+                    onChange={e => setPrefs(p => ({ ...p, strictness: parseFloat(e.target.value) }))}
+                    className="w-32 h-1.5 bg-gray-200 dark:bg-gray-700 rounded-lg appearance-none cursor-pointer accent-blue-600"
+                  />
+                  <span className="text-xs font-mono font-bold text-blue-600 w-8">{prefs.strictness.toFixed(2)}</span>
+                </div>
+              </div>
+
+              <button onClick={() => setIsExpanded(false)} className="self-end p-2 bg-gray-100 dark:bg-gray-800 rounded-full hover:bg-gray-200 dark:hover:bg-gray-700 transition-colors">
+                <X size={16} className="text-gray-500" />
+              </button>
             </div>
-            
-            <button onClick={() => setIsExpanded(false)} className="ml-auto p-2 bg-gray-100 dark:bg-gray-800 rounded-full hover:bg-gray-200 dark:hover:bg-gray-700 transition-colors">
-              <X size={16} className="text-gray-500" />
-            </button>
           </div>
         )}
       </div>

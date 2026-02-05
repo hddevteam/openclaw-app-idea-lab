@@ -16,7 +16,11 @@ export async function handleIdeaGenerate(req, res, { labRuntime, labRoot }){
   const strictness = Number(input.strictness || 0.78);
   const want = Math.max(3, Math.min(12, Number(input.want || count)));
 
-  // Optional: refresh research sources (default: false, since planner_research auto-generates ideas now)
+  const categories = Array.isArray(input.categories) ? input.categories.join(', ') : 'General';
+  const styles = Array.isArray(input.styles) ? input.styles.join(', ') : 'Tactile';
+  const form = input.form || 'ui-template';
+
+  // Optional: refresh research... (keep existing code)
   const refreshResearch = input.refreshResearch === true;
   if (refreshResearch) {
     try {
@@ -36,13 +40,24 @@ export async function handleIdeaGenerate(req, res, { labRuntime, labRoot }){
 
 IMPORTANT: Output MUST be written in ${LANG}, except URLs.
 
+Context:
+- Category focus: ${categories}
+- Visual/Interaction Style: ${styles}
+- Form: ${form} (Priority: minimal interaction logic that works)
+
 Goal:
 - Generate ${count} NEW micro-app/web tool ideas.
 - FOCUS: "Simple, Fast, Tactile".
 - CONSTRAINT: Each idea must be buildable in 60 mins (React+Tailwind).
 - CONSTRAINT: Must be "Simulation-First" (Works offline with fake data).
+- MOBILE USABILITY CRITICAL:
+  - DO NOT capture gestures on document/body.
+  - Interaction areas MUST be contained (e.g. within a center card).
+  - Use "centered layout" to leave space for page scrolling at edges.
+  - Provide button fallbacks for complex gestures (e.g., +/- for pinch).
+  - Use 'touch-action: pan-y' for lists to preserve vertical scroll.
+- STYLE: Apply "${styles}" aesthetics and logic.
 - Must be semantically different from ALL past projects.
-- Must include touch gestures (Swipe/Drag/Pinch).
 - Each idea must cite 1-2 research sources (title+url) from the provided sources.
 - Strictness: treat similarity >= ${strictness} as duplicate.
 
@@ -142,22 +157,26 @@ Return ONLY valid JSON with schema (all string fields must be in ${LANG}):
     }
     const out = { updatedAt: new Date().toISOString(), ideas: Array.from(byId.values()) };
     await fs.writeFile(p, JSON.stringify(out, null, 2));
-  }catch{}
+  } catch (err) {
+    console.error('Failed to save filtered ideas:', err.message);
+  }
 
   // Persist accepted ideas to backlog (unimplemented AI ideas)
-  try{
+  try {
     const p = path.join(labRuntime, 'data', 'idea_backlog.json');
     const cur = JSON.parse(await fs.readFile(p,'utf8').catch(()=>'{"updatedAt":null,"ideas":[]}'));
     const curIdeas = Array.isArray(cur.ideas) ? cur.ideas : [];
     const byId = new Map(curIdeas.map(x=>[String(x.id), x]));
-    for(const idea of accepted){
+    for (const idea of accepted) {
       const id = String(idea.id||'');
-      if(!id) continue;
-      if(!byId.has(id)) byId.set(id, { ...idea, createdAt: new Date().toISOString(), status: 'new' });
+      if (!id) continue;
+      if (!byId.has(id)) byId.set(id, { ...idea, createdAt: new Date().toISOString(), status: 'new' });
     }
     const out = { updatedAt: new Date().toISOString(), ideas: Array.from(byId.values()) };
     await fs.writeFile(p, JSON.stringify(out, null, 2));
-  }catch{}
+  } catch (err) {
+    console.error('Failed to save backlog ideas:', err.message);
+  }
 
   const outJson = { ...json, ideas: accepted, filtered: rejected.length };
 
