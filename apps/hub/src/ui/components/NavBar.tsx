@@ -2,15 +2,22 @@ import React, { useState } from 'react';
 import { Sparkles, MessageSquare, History, FilterX, Settings2, Loader2, X } from 'lucide-react';
 import { clsx } from 'clsx';
 
+interface LabPrefs {
+  themes: string[];
+  form: string;
+  strictness: number;
+}
+
 interface NavBarProps {
   activeTab: 'hub' | 'lab';
   onTabChange: (tab: 'hub' | 'lab') => void;
   onFeedbackClick: () => void;
-  entriesCount: number;
+  // entriesCount is not used for now, keeping it consistent with App.tsx but prefixed with _ to satisfy lint
+  _entriesCount?: number;
   
   // Lab Specific Props
   labProps?: {
-    onGenerate: (prefs: any) => void;
+    onGenerate: (prefs: LabPrefs) => void;
     onRunResearch: () => void;
     onViewChange: (view: 'backlog' | 'filtered' | 'built') => void;
     activeView: 'backlog' | 'filtered' | 'built';
@@ -25,11 +32,10 @@ export const NavBar: React.FC<NavBarProps> = ({
   activeTab, 
   onTabChange, 
   onFeedbackClick, 
-  entriesCount, 
   labProps 
 }) => {
   const [isExpanded, setIsExpanded] = useState(false);
-  const [prefs, setPrefs] = useState({
+  const [prefs, setPrefs] = useState<LabPrefs>({
     themes: ['ai', 'system', 'network'],
     form: 'tool',
     strictness: 0.78
@@ -45,31 +51,31 @@ export const NavBar: React.FC<NavBarProps> = ({
   };
 
   return (
-    <nav className="sticky top-4 sm:top-6 mx-auto w-[95%] max-w-[1200px] z-[2000] mb-8 sm:mb-12 space-y-2">
-      <div className="rounded-[24px] shadow-2xl overflow-hidden bg-white/90 dark:bg-[#1c1c1e]/90 backdrop-blur-xl border border-[#e5e5e7] dark:border-[#2d2d2f]">
+    <nav className="sticky top-2 sm:top-4 mx-auto w-[98%] max-w-[1000px] z-[2000] mb-4 sm:mb-8 space-y-1">
+      <div className="rounded-[20px] shadow-xl overflow-hidden bg-white/80 dark:bg-[#1c1c1e]/80 backdrop-blur-xl border border-[#e5e5e7] dark:border-[#2d2d2f]">
         {/* Row 1: Brand & Main Navigation */}
-        <div className="px-3 sm:px-5 py-2 sm:py-3 flex items-center justify-between gap-3">
-          <div className="flex items-center gap-1.5 sm:gap-3 shrink-0">
+        <div className="px-2.5 sm:px-4 py-1.5 sm:py-2 flex items-center justify-between gap-2.5">
+          <div className="flex items-center gap-1.5 sm:gap-2 shrink-0">
             <div 
-              className="w-10 h-10 rounded-xl bg-blue-600 flex items-center justify-center text-white shadow-lg cursor-pointer transition-transform active:scale-90 shrink-0" 
+              className="w-8 h-8 rounded-lg bg-blue-600 flex items-center justify-center text-white shadow-lg cursor-pointer transition-transform active:scale-90 shrink-0" 
               onClick={() => onTabChange('hub')}
             >
-              <Sparkles size={20} />
+              <Sparkles size={16} />
             </div>
-            <div className="flex flex-col justify-center min-w-0 bg-[#f5f5f7] dark:bg-[#2d2d2f] px-2.5 py-1.5 rounded-xl border border-[#e5e5e7] dark:border-[#3d3d3f]">
-              <h1 className="text-sm font-black tracking-tight text-[#111] dark:text-[#f5f5f7] leading-none uppercase">Daily App Lab</h1>
-              <p className="text-[10px] text-blue-600 dark:text-blue-400 font-bold uppercase tracking-[0.15em] leading-none mt-1">
+            <div className="flex flex-col justify-center min-w-0 bg-[#f5f5f7] dark:bg-[#2d2d2f] px-2 py-1 rounded-lg border border-[#e5e5e7] dark:border-[#3d3d3f]">
+              <h1 className="text-[11px] font-black tracking-tight text-[#111] dark:text-[#f5f5f7] leading-none uppercase">Daily App Lab</h1>
+              <p className="text-[8px] text-blue-600 dark:text-blue-400 font-bold uppercase tracking-[0.1em] leading-none mt-0.5">
                 {activeTab === 'hub' ? 'Center' : 'Engine'}
               </p>
             </div>
           </div>
 
-          <div className="flex items-center gap-1 sm:gap-3 flex-1 justify-center max-w-md">
-            <div className="flex bg-[#f5f5f7] dark:bg-[#2d2d2f] p-1 rounded-xl w-full">
+          <div className="flex items-center gap-1 sm:gap-2 flex-1 justify-center max-w-sm">
+            <div className="flex bg-[#f5f5f7] dark:bg-[#2d2d2f] p-0.5 rounded-lg w-full">
               <button 
                 onClick={() => onTabChange('hub')}
                 className={clsx(
-                  "flex-1 px-4 py-1.5 sm:py-2 rounded-lg text-[10px] sm:text-[11px] font-bold transition-all whitespace-nowrap",
+                  "flex-1 px-3 py-1 sm:py-1.5 rounded-md text-[10px] sm:text-[11px] font-bold transition-all whitespace-nowrap",
                   activeTab === 'hub' ? "bg-white dark:bg-[#1c1c1e] shadow-sm text-blue-600 dark:text-blue-400" : "text-gray-400"
                 )}
               >
@@ -78,7 +84,7 @@ export const NavBar: React.FC<NavBarProps> = ({
               <button 
                 onClick={() => onTabChange('lab')}
                 className={clsx(
-                  "flex-1 px-4 py-1.5 sm:py-2 rounded-lg text-[10px] sm:text-[11px] font-bold transition-all whitespace-nowrap",
+                  "flex-1 px-3 py-1 sm:py-1.5 rounded-md text-[10px] sm:text-[11px] font-bold transition-all whitespace-nowrap",
                   activeTab === 'lab' ? "bg-white dark:bg-[#1c1c1e] shadow-sm text-orange-600 dark:text-orange-400" : "text-gray-400"
                 )}
               >
@@ -90,86 +96,92 @@ export const NavBar: React.FC<NavBarProps> = ({
           <div className="hidden sm:flex items-center shrink-0">
             <button 
               onClick={onFeedbackClick}
-              className="flex items-center gap-2 px-3 sm:px-4 py-2 sm:py-2.5 rounded-xl bg-[#f5f5f7] dark:bg-[#2d2d2f] hover:bg-[#e5e5e7] dark:hover:bg-[#3d3d3f] text-[#111] dark:text-white text-[10px] sm:text-[11px] font-bold active:scale-95 transition-all"
+              className="flex items-center gap-2 px-3 py-1.5 rounded-lg bg-[#f5f5f7] dark:bg-[#2d2d2f] hover:bg-[#e5e5e7] dark:hover:bg-[#3d3d3f] text-[#111] dark:text-white text-[10px] sm:text-[11px] font-bold active:scale-95 transition-all"
             >
-              <MessageSquare size={14} />
-              <span className="hidden xl:inline">Feedback</span>
+              <MessageSquare size={13} />
+              <span className="hidden lg:inline">Feedback</span>
             </button>
           </div>
         </div>
 
         {/* Row 2: Lab Specific Filters & Actions */}
         {activeTab === 'lab' && labProps && (
-          <div className="px-3 sm:px-5 py-2 sm:py-2.5 border-t border-[#f5f5f7] dark:border-[#2d2d2f] flex flex-wrap items-center justify-between gap-3 animate-in fade-in slide-in-from-top-2 duration-500">
-            <div className="flex items-center gap-1 bg-[#f5f5f7] dark:bg-[#151517] p-1 rounded-xl overflow-x-auto no-scrollbar max-w-[50%] sm:max-w-none">
+          <div className="px-2 sm:px-4 py-1.5 sm:py-2 border-t border-[#f5f5f7] dark:border-[#2d2d2f] flex items-center justify-between gap-1 animate-in fade-in slide-in-from-top-2 duration-500">
+            <div className="flex items-center gap-0.5 bg-[#f5f5f7] dark:bg-[#151517] p-0.5 rounded-lg flex-1 min-w-0">
               <button 
                 onClick={() => labProps.onViewChange('backlog')}
                 className={clsx(
-                  "flex items-center gap-2 px-2 sm:px-3 py-1.5 rounded-lg text-[10px] sm:text-[11px] font-bold transition-all whitespace-nowrap",
+                  "flex-1 flex items-center justify-center gap-1 sm:gap-1.5 px-1.5 sm:px-3 py-1 rounded-md text-[10px] sm:text-[11px] font-bold transition-all whitespace-nowrap relative min-w-0",
                   labProps.activeView === 'backlog' ? "bg-white dark:bg-[#1c1c1e] shadow-sm text-blue-600 dark:text-blue-400" : "text-gray-400"
                 )}
               >
-                <History size={14} />
-                <span>Backlog ({labProps.backlogCount})</span>
+                <History size={13} className="shrink-0" />
+                <span className="truncate max-w-[42px] sm:max-w-none">Backlog</span>
+                {labProps.backlogCount > 0 && (
+                  <span className="absolute -top-1 -right-0.5 min-w-[14px] h-3.5 px-1 bg-red-500 text-white text-[8px] rounded-full flex items-center justify-center font-black border border-[#f5f5f7] dark:border-[#151517]">
+                    {labProps.backlogCount}
+                  </span>
+                )}
               </button>
               <button 
                 onClick={() => labProps.onViewChange('filtered')}
                 className={clsx(
-                  "flex items-center gap-2 px-2 sm:px-3 py-1.5 rounded-lg text-[10px] sm:text-[11px] font-bold transition-all whitespace-nowrap",
+                  "flex-1 flex items-center justify-center gap-1 sm:gap-1.5 px-1.5 sm:px-3 py-1 rounded-md text-[10px] sm:text-[11px] font-bold transition-all whitespace-nowrap relative min-w-0",
                   labProps.activeView === 'filtered' ? "bg-white dark:bg-[#1c1c1e] shadow-sm text-orange-600 dark:text-orange-400" : "text-gray-400"
                 )}
               >
-                <FilterX size={14} />
-                <span>Filtered</span>
+                <FilterX size={13} className="shrink-0" />
+                <span className="truncate max-w-[42px] sm:max-w-none">Filtered</span>
               </button>
               <button 
                 onClick={() => labProps.onViewChange('built')}
                 className={clsx(
-                  "flex items-center gap-2 px-2 sm:px-3 py-1.5 rounded-lg text-[10px] sm:text-[11px] font-bold transition-all whitespace-nowrap",
+                  "flex-1 flex items-center justify-center gap-1 sm:gap-1.5 px-1.5 sm:px-3 py-1 rounded-md text-[10px] sm:text-[11px] font-bold transition-all whitespace-nowrap relative min-w-0",
                   labProps.activeView === 'built' ? "bg-white dark:bg-[#1c1c1e] shadow-sm text-green-600 dark:text-green-400" : "text-gray-400"
                 )}
               >
-                <Sparkles size={14} />
-                <span>Built ({labProps.builtCount})</span>
+                <Sparkles size={13} className="shrink-0" />
+                <span className="truncate max-w-[42px] sm:max-w-none">Built</span>
+                {labProps.builtCount > 0 && (
+                  <span className="absolute -top-1 -right-0.5 min-w-[14px] h-3.5 px-1 bg-green-500 text-white text-[8px] rounded-full flex items-center justify-center font-black border border-[#f5f5f7] dark:border-[#151517]">
+                    {labProps.builtCount}
+                  </span>
+                )}
               </button>
             </div>
 
-            <div className="flex items-center gap-2 ml-auto">
+            <div className="flex items-center gap-1 shrink-0 ml-1">
               <button 
-                onClick={labProps.onRunResearch}
+                onClick={labProps.backlogCount === 0 ? labProps.onRunResearch : () => labProps.onGenerate(prefs)}
                 disabled={labProps.isResearching || labProps.isGenerating}
-                className="flex items-center gap-2 px-3 sm:px-4 py-2 rounded-xl bg-blue-50 dark:bg-blue-900/10 hover:bg-blue-100 dark:hover:bg-blue-900/20 text-blue-600 dark:text-blue-400 text-[10px] sm:text-[11px] font-bold active:scale-95 transition-all disabled:opacity-50"
+                className={clsx(
+                  "flex items-center justify-center h-8 px-3 rounded-lg font-bold text-[10px] sm:text-[11px] active:scale-95 transition-all disabled:opacity-50 shadow-md",
+                  labProps.isResearching || labProps.isGenerating ? "bg-gray-100 dark:bg-gray-800 text-gray-400" :
+                  labProps.backlogCount === 0 ? "bg-blue-600 text-white shadow-blue-500/20" : "bg-orange-600 text-white shadow-orange-500/20"
+                )}
               >
-                {labProps.isResearching ? <Loader2 size={16} className="animate-spin" /> : <History size={14} className="sm:size-4 rotate-180" />}
-                <span className="hidden sm:inline">Research</span>
+                {labProps.isResearching || labProps.isGenerating ? (
+                  <Loader2 size={13} className="animate-spin" />
+                ) : labProps.backlogCount === 0 ? (
+                  <History size={13} className="rotate-180" />
+                ) : (
+                  <Sparkles size={13} />
+                )}
+                <span className="ml-1.5 whitespace-nowrap">
+                  {labProps.isResearching ? 'Researching...' : 
+                   labProps.isGenerating ? 'Building...' :
+                   labProps.backlogCount === 0 ? 'Research' : 'Generate'}
+                </span>
               </button>
-
-              <button 
-                onClick={() => labProps.onGenerate(prefs)}
-                disabled={labProps.isGenerating || labProps.isResearching}
-                className="flex items-center gap-2 px-3 sm:px-4 py-2 rounded-xl bg-orange-600 hover:bg-orange-700 disabled:bg-orange-300 text-white text-[10px] sm:text-[11px] font-bold shadow-lg shadow-orange-500/20 active:scale-95 transition-all"
-              >
-                {labProps.isGenerating ? <Loader2 size={16} className="animate-spin" /> : <Sparkles size={14} className="sm:size-4" />}
-                <span className="hidden sm:inline">Generate New</span>
-              </button>
-
-              <div className="h-6 w-[1px] bg-gray-200 dark:bg-gray-800 mx-1" />
 
               <button 
                 onClick={() => setIsExpanded(!isExpanded)}
                 className={clsx(
-                  "p-2 rounded-xl transition-colors",
+                  "p-1.5 rounded-lg transition-colors shrink-0",
                   isExpanded ? "bg-gray-100 dark:bg-gray-800 text-blue-600" : "hover:bg-[#f5f5f7] dark:hover:bg-[#2d2d2f] text-gray-400"
                 )}
               >
-                <Settings2 size={18} />
-              </button>
-              
-              <button 
-                onClick={onFeedbackClick}
-                className="sm:hidden p-2 rounded-xl bg-[#f5f5f7] dark:bg-[#2d2d2f] text-gray-400"
-              >
-                <MessageSquare size={18} />
+                <Settings2 size={16} />
               </button>
             </div>
           </div>

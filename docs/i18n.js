@@ -18,8 +18,8 @@ const translations = {
     zh: {
         title: "OpenClaw App Idea Lab",
         tagline: "AI 原生工具的进化引擎",
-        heroTitle: "不知道用 OpenClaw 做什么？已经才思枯竭？",
-        heroSubtitle: "我们帮你把互联网上闪烁的商业火花，变成触手可及的现实。不再纠结于如何开始，让 Idea Lab 自动扫描全网痛点，并在你醒来时递上一份开箱即用的 App 原型。",
+        heroTitle: "让 AI 帮你发现下一个“Killer App”",
+        heroSubtitle: "不再等待灵感被动降临。让 Idea Lab 深入互联网的角落，为你捕捉那些尚未被解决的商机。",
         githubButton: "在 GitHub 上开启进化",
         demoTitle: "观看演示",
         scenariosTitle: "这能为你带来什么？",
