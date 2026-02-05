@@ -100,9 +100,9 @@ Return ONLY valid JSON with schema (all string fields must be in ${LANG}):
 
   const text = extractTextFromResponse(resp);
   let json;
-  try{
+  try {
     json = JSON.parse(text);
-  }catch(e){
+  } catch (_e) {
     throw new Error('Model did not return valid JSON');
   }
 
@@ -176,6 +176,49 @@ Return ONLY valid JSON with schema (all string fields must be in ${LANG}):
     await fs.writeFile(p, JSON.stringify(out, null, 2));
   } catch (err) {
     console.error('Failed to save backlog ideas:', err.message);
+  }
+
+  // --- Research Archiving & Indexing ---
+  try {
+    const timestamp = new Date().toISOString().replace(/[:.]/g, '-');
+    const logDir = path.join(labRuntime, 'data', 'research_logs');
+    const reportPath = path.join(labRuntime, 'data', 'trends_report.md');
+    const indexPath = path.join(labRuntime, 'data', 'research_index.md');
+
+    // 1. Save snapshot of current research report
+    let reportContent = '';
+    try {
+      reportContent = await fs.readFile(reportPath, 'utf8');
+    } catch {
+      reportContent = '> No research report available for this session.';
+    }
+
+    const snapshotName = `research_${timestamp}.md`;
+    const snapshotPath = path.join(logDir, snapshotName);
+    
+    const snapshotHeader = `# Research Snapshot: ${new Date().toLocaleString()}\n\n` +
+      `**Categories**: ${categories}\n` +
+      `**Styles**: ${styles}\n` +
+      `**Form**: ${form}\n` +
+      `**Generated Ideas**: ${accepted.length}\n\n` +
+      `--- \n\n`;
+    
+    await fs.writeFile(snapshotPath, snapshotHeader + reportContent);
+
+    // 2. Update central index
+    const indexEntry = `| ${new Date().toLocaleString()} | [${snapshotName}](./research_logs/${snapshotName}) | ${categories} | ${styles} | ${accepted.length} |\n`;
+    let indexContent = '';
+    try {
+      indexContent = await fs.readFile(indexPath, 'utf8');
+    } catch {
+      indexContent = `# Research & Generation Index\n\n| Date | Report Link | Categories | Styles | Ideas |\n| :--- | :--- | :--- | :--- | :--- |\n`;
+    }
+    
+    // Check if the entry already exists (though timestamp makes it unique)
+    await fs.writeFile(indexPath, indexContent + indexEntry);
+    console.log(`[Archive] Saved research snapshot to ${snapshotName}`);
+  } catch (err) {
+    console.warn('[Archive] Failed to archive research:', err.message);
   }
 
   const outJson = { ...json, ideas: accepted, filtered: rejected.length };
