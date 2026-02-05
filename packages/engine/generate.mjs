@@ -147,7 +147,7 @@ async function main() {
     `- Tech stack: ${chosenUI} + ${chosenStyling}`,
     `- Touch-friendly (tap/drag/pinch) + mouse`,
     `- Responsive + safe-area support`,
-    `- Self-healing: include runtime watchdog/error boundary`,
+    `- Self-healing: include runtime error boundary`,
     `- NO external API keys allowed. You MUST implement a "SimulationEngine" with mock data (JSON/Generators).`,
     `- Build: ensure \`npm run build -- --base ./\` works`,
     `- README: document scenario + features + how to use`,

@@ -31,7 +31,6 @@ Every day generate a **different**, **interactive**, **elegant** app project (Vi
 
 ### 2. Robustness & Self-Healing
 - **Error Boundaries**: Must include a runtime error boundary (React/Vue) or global `window.onerror` / `unhandledrejection` handler with user-friendly fallback UI.
-- **Watchdog/Recovery**: Implement a simple watchdog that detects frozen state (e.g., no updates for 5s) and offers auto-recovery or manual reset button.
 - **Retry Logic**: Use exponential backoff for any network requests (max 3 retries, 1s → 2s → 4s delays).
 - **Memory Protection**: 
   - Clean up event listeners on unmount
