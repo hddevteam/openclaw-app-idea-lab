@@ -107,11 +107,11 @@ export const NavBar: React.FC<NavBarProps> = ({
         {/* Row 2: Lab Specific Filters & Actions */}
         {activeTab === 'lab' && labProps && (
           <div className="px-2 sm:px-4 py-1.5 sm:py-2 border-t border-[#f5f5f7] dark:border-[#2d2d2f] flex items-center justify-between gap-1 animate-in fade-in slide-in-from-top-2 duration-500">
-            <div className="flex items-center gap-0.5 bg-[#f5f5f7] dark:bg-[#151517] p-0.5 rounded-lg flex-1 min-w-0">
+            <div className="flex items-center gap-0.5 bg-[#f5f5f7] dark:bg-[#151517] p-0.5 rounded-lg sm:flex-none flex-1 min-w-0">
               <button 
                 onClick={() => labProps.onViewChange('backlog')}
                 className={clsx(
-                  "flex-1 flex items-center justify-center gap-1 sm:gap-1.5 px-1.5 sm:px-3 py-1 rounded-md text-[10px] sm:text-[11px] font-bold transition-all whitespace-nowrap relative min-w-0",
+                  "flex-1 sm:flex-none flex items-center justify-center gap-1 sm:gap-1.5 px-1.5 sm:px-3 py-1 rounded-md text-[10px] sm:text-[11px] font-bold transition-all whitespace-nowrap relative min-w-0",
                   labProps.activeView === 'backlog' ? "bg-white dark:bg-[#1c1c1e] shadow-sm text-blue-600 dark:text-blue-400" : "text-gray-400"
                 )}
               >
@@ -126,7 +126,7 @@ export const NavBar: React.FC<NavBarProps> = ({
               <button 
                 onClick={() => labProps.onViewChange('filtered')}
                 className={clsx(
-                  "flex-1 flex items-center justify-center gap-1 sm:gap-1.5 px-1.5 sm:px-3 py-1 rounded-md text-[10px] sm:text-[11px] font-bold transition-all whitespace-nowrap relative min-w-0",
+                  "flex-1 sm:flex-none flex items-center justify-center gap-1 sm:gap-1.5 px-1.5 sm:px-3 py-1 rounded-md text-[10px] sm:text-[11px] font-bold transition-all whitespace-nowrap relative min-w-0",
                   labProps.activeView === 'filtered' ? "bg-white dark:bg-[#1c1c1e] shadow-sm text-orange-600 dark:text-orange-400" : "text-gray-400"
                 )}
               >
@@ -136,7 +136,7 @@ export const NavBar: React.FC<NavBarProps> = ({
               <button 
                 onClick={() => labProps.onViewChange('built')}
                 className={clsx(
-                  "flex-1 flex items-center justify-center gap-1 sm:gap-1.5 px-1.5 sm:px-3 py-1 rounded-md text-[10px] sm:text-[11px] font-bold transition-all whitespace-nowrap relative min-w-0",
+                  "flex-1 sm:flex-none flex items-center justify-center gap-1 sm:gap-1.5 px-1.5 sm:px-3 py-1 rounded-md text-[10px] sm:text-[11px] font-bold transition-all whitespace-nowrap relative min-w-0",
                   labProps.activeView === 'built' ? "bg-white dark:bg-[#1c1c1e] shadow-sm text-green-600 dark:text-green-400" : "text-gray-400"
                 )}
               >

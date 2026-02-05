@@ -7,6 +7,7 @@
     "packages/*"
   ],
   "scripts": {
+    "dev": "concurrently \"npm run serve:hub\" \"npm run dev:hub\"",
     "dev:hub": "npm --workspace ./apps/hub run dev",
     "serve:hub": "npm --workspace ./apps/hub run hub:serve",
     "build": "npm -ws run build --if-present",
@@ -21,6 +22,7 @@
   },
   "devDependencies": {
     "@eslint/js": "^9.39.2",
+    "concurrently": "^9.2.1",
     "globals": "^17.3.0",
     "husky": "^9.1.7",
     "lint-staged": "^16.2.7",
