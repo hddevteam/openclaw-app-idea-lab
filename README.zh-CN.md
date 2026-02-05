@@ -74,4 +74,5 @@ npm run serve:hub
 ---
 
 ## 📜 许可证
-MIT © OpenClaw Team
+
+MIT © HDDevTeam

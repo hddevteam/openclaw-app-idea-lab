@@ -74,5 +74,5 @@ Visit: `http://localhost:41777`
 ---
 
 ## 📜 License
-MIT © HDdevteam 
+MIT © HDDevTeam 
 
