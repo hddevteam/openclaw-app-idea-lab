@@ -24,7 +24,7 @@ export async function handleIdeaGenerate(req, res, { labRuntime, labRoot }){
   const refreshResearch = input.refreshResearch === true;
   if (refreshResearch) {
     try {
-      await runPlannerResearch({ labRoot, timeoutMs: 120000 });
+      await runPlannerResearch({ labRoot, timeoutMs: 300000 });
     } catch (err) {
       console.warn('Failed to refresh research data:', err.message);
     }
