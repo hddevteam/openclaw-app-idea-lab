@@ -44,6 +44,7 @@ Every day generate a **different**, **interactive**, **elegant** app project (Vi
 
 #### Device & Input Adaptation
 - **Multi-Input**: Support both touch (tap/drag/pinch/rotate) and pointer (mouse/keyboard/trackpad).
+  - **Drag & Drop Safety**: DO NOT use `setPointerCapture` on draggable source elements, as it prevents drop zones from receiving events. Always use global `pointerup` and `Escape` key listeners for state cleanup.
   - Touch targets: minimum 44x44px (iOS HIG) or 48x48px (Material)
   - Hover states only for pointer devices (use `@media (hover: hover)`)
   - Keyboard navigation: all interactive elements must be focusable with visible focus indicators
