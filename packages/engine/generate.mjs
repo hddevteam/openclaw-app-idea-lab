@@ -129,10 +129,6 @@ async function main() {
   const scenario = idea?.scenario || idea?.hudScenario || idea?.desc || idea?.description || '';
   const ideaId = idea?.id;
 
-  // Stability logic: Fixed tech stack to reduce build failures and ensure reliable output
-  const chosenStyling = 'Tailwind CSS (standard v3 via PostCSS)';
-  const chosenUI = 'React 18';
-
   try {
     await writeBuildStatus('running', { title, outId, progress: 10, stage: 'coding' });
 
@@ -148,10 +144,11 @@ async function main() {
     `- CRITICAL INTERACTION: Follow "Drag & Drop Safety" in DAILY_SPEC.md. Use 'framer-motion' for physics and animations.`,
     `- Language: Use ${LANG} for ALL UI and content.`,
     `- No external APIs. Use a "SimulationEngine" for all data.`,
-    `- Ensure 'npm run build -- --base ./' works.`,
+    `- Ensure 'npm run build -- --base ./' works.` + (scenario ? `\n- CRITICAL: Your README.md MUST include a section '## Scenario' containing exactly the scenario text provided above.` : ''),
     `\nOutput instructions:`,
     `- Just output the code. No explanations.`,
     `- Include all necessary files (~5-7 files maximum).`,
+    `- MUST include a README.md file (does not count towards the file limit).`,
     `- Make sure the app is immediately usable with demo data.`,
     `CRITICAL: Do NOT include HUGE external assets, but 50-100 lines of mock JSON/Simulation logic is REQUIRED.`,
     `CRITICAL: If you need more space, prefer minimal working features over completeness.`,

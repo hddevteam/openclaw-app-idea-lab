@@ -34,13 +34,15 @@ export async function listOutputsAsManifest({ labOutputs }){
       if(p) desc = p.trim().slice(0, 200);
 
       // Extract Scenario
-      const scenarioMatch = raw.match(/## (?:Scenario|Use Case（使用场景）|Use Case|Project Overview|项目概览)\s*([\s\S]*?)(?=\n##|$)/i);
+      const scenarioMatch = raw.match(/## (?:Scenario|场景|Use Case（使用场景）|Use Case|Project Overview|项目概览)\s*([\s\S]*?)(?=\n##|$)/i);
       if(scenarioMatch) scenario = scenarioMatch[1].trim();
 
       // Extract Workflow
-      const workflowMatch = raw.match(/## (?:How to use|Workflow|如何使用|操作说明|Core Interactions|核心交互|Sample Workflow)\s*([\s\S]*?)(?=\n##|$)/i);
+      const workflowMatch = raw.match(/## (?:How to use|Workflow|流程|如何使用|操作说明|Core Interactions|核心交互|Sample Workflow)\s*([\s\S]*?)(?=\n##|$)/i);
       if(workflowMatch) workflow = workflowMatch[1].trim();
-    }catch{}
+    }catch(e){
+      console.error(`Failed to parse README for ${name}:`, e.message);
+    }
     entries.push({ date: name, id: name, title, desc, scenario, workflow, indexPath });
   }
 
