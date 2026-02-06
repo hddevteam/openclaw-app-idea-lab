@@ -33,15 +33,72 @@
   - `phaseIdeate`: 强化“锚点约束”，确保所有 Idea 解决的是同一个核心问题，但提供不同的交互视角（例如：一个偏视觉，一个偏效率，一个偏自动化）。
 
 ## 4. 数据结构变更
-在 `idea_backlog.json` 中，每个 Idea 将增加以下字段：
+为了让“集合”在 Idea 列表与 AppHub 项目列表中都能成为第一等公民，建议引入 **Campaign（集合/专题/批次）**。
+
+### 4.1 Idea 级字段（用于分组/过滤/状态）
+在 `idea_backlog.json`（以及 `idea_filtered.json`）中，每个 Idea 增加字段：
+
 ```json
 {
-  ...
+  "id": "...",
+  "title": "...",
+
+  "campaignId": "camp_2026-02-06T12-00-00Z_photographer-asset",
   "topicTag": "photographer-asset-2026",
   "isTargeted": true,
-  "originalAnchor": "针对独立摄影师的资产维护工具"
+  "originalAnchor": "针对独立摄影师的资产维护工具",
+
+  "status": "new",
+  "build": {
+    "projectId": null,
+    "lastError": null,
+    "queuedAt": null,
+    "startedAt": null,
+    "finishedAt": null
+  }
 }
 ```
+
+字段说明：
+- `campaignId`：强绑定“集合”，用于 UI 折叠分组、批量生成的范围圈定、以及后续归档/重试。
+- `topicTag`：可读的过滤标签（用于搜索与跨集合聚合）。
+- `status`：用于批量生成进度展示（`new | queued | running | built | failed | skipped`）。
+- `build.projectId`：生成成功后写入，用于从 Idea 跳转到 AppHub 项目。
+
+### 4.2 Campaign 元数据（用于集合卡片展示）
+建议新增：`packages/engine/runtime/data/campaigns.json`（或放在 hub 的 `labRuntime/data/` 下，保持与 backlog 同目录）。
+
+```json
+{
+  "updatedAt": "...",
+  "campaigns": [
+    {
+      "campaignId": "camp_...",
+      "topicTag": "photographer-asset-2026",
+      "title": "摄影师资产维护",
+      "originalAnchor": "...",
+      "createdAt": "...",
+      "options": { "creative": 0.6, "count": 6, "lang": "zh-CN" },
+      "stats": { "total": 6, "built": 0, "failed": 0, "running": 0 }
+    }
+  ]
+}
+```
+
+说明：
+- 仅靠 Idea 级字段也能分组，但 Campaign 元数据可以让 UI 更“像一个集合”（有标题、参数、统计）。
+- `stats` 可由后端按 backlog 动态汇总，也可在写入时顺便维护（推荐动态汇总以避免状态漂移）。
+
+### 4.3 AppHub 项目侧的关联（让产物也能按集合显示）
+要在 AppHub（项目/卡片列表）中按集合呈现，必须把 `campaignId/topicTag` 传播到“项目元数据”。建议：
+
+- 在项目生成时，将 `campaignId/topicTag/originalAnchor/ideaId` 写入项目的 `README.md`（前置 metadata 区块）或写入项目的 `manifest.json`（如果项目侧有）。
+- Hub 在构建/索引 `manifest.json` 时，将这些字段带入条目中（至少 `campaignId` 和 `topicTag`）。
+
+这样 AppHub 才能做到：
+- 项目卡片显示 `topicTag` badge
+- 侧边栏/顶部提供 “Collections (Campaigns)” 过滤
+- 点击某 campaign 展示该 campaign 下所有已构建项目
 
 ## 5. 开发路线图
 1. [ ] 先做“纯函数模块”与契约（tag/slug、入参校验、idea 打标）。
@@ -50,6 +107,60 @@
 4. [ ] Hub 后端增加 `/api/idea/research/targeted` 接口（返回 campaignId + ideas 预览）。
 5. [ ] Hub 前端增加“深度调研”入口：输入 Topic + 选项，支持按标签分组与批量选择。
 6. [ ] 批量实现：将选中的 ideas 发送到生成/构建队列（可先做“导出 JSON/生成任务清单”作为 MVP）。
+
+## 5.1 针对用户的两个关键问题：推荐解决方案
+
+### Q1：如何在 Idea 和 AppHub 中“视觉上显示成一个集合”？
+推荐：引入 **Campaign 视图**（集合卡片 + 展开列表）。
+
+**Idea 侧（Backlog/Filtered）**
+- 默认按 `campaignId` 分组渲染（可折叠）。
+- 每个 campaign 卡片展示：
+  - `title/originalAnchor`（标题）
+  - `topicTag` badge
+  - 统计：`total/built/failed/running`
+  - 快捷操作：`批量生成` / `导出` / `重新Research` / `归档`
+
+**AppHub 侧（Projects）**
+- 项目卡片显示 `topicTag` badge。
+- 新增 “Collections” 过滤维度：选择某 campaign 后，只显示其下项目。
+- 从 Idea 行可直接跳转到对应 `projectId` 的项目卡片（前提：build 写回 projectId）。
+
+### Q2：如何在生成时，对这个集合进行批量生成？
+推荐：**后端队列化 Batch Job**（可恢复、可观察、默认串行）。
+
+核心原则：
+- **默认并发=1**（避免同时写 runtime/data、生成多个项目目录导致冲突；稳定后再考虑并发=2）。
+- **可恢复**：任何中断（Hub 重启/网络抖动）都能从 job 状态继续。
+
+数据结构建议：新增 `labRuntime/data/batch_jobs.json`：
+
+```json
+{
+  "updatedAt": "...",
+  "jobs": [
+    {
+      "jobId": "job_...",
+      "campaignId": "camp_...",
+      "createdAt": "...",
+      "concurrency": 1,
+      "items": [
+        { "ideaId": "...", "status": "queued", "projectId": null, "error": null }
+      ],
+      "status": "running",
+      "cursor": 0
+    }
+  ]
+}
+```
+
+运行逻辑（概念层）：
+1. UI 选择某 campaign（或其下若干 ideas）点击“批量生成”
+2. Hub API 创建 job，并把涉及的 idea 标记为 `queued`
+3. runner 逐个执行：
+   - `queued -> running -> built/failed`
+   - 成功则写回 `idea.build.projectId` + 写入项目 metadata（带 campaignId）
+4. job 完成后：`status = done`，campaign 统计自动体现
 
 ## 6. 模块化拆分（建议的代码边界）
 目标：把“目标导向 Research”做成可组合的 pipeline，每一步都能被单独测试/替换（尤其是网络与 LLM）。
