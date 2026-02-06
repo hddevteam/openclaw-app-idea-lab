@@ -107,6 +107,7 @@ Each daily project must clearly state at least one real-world application scenar
 
 ### 4. Technical Baseline
 - **Build**: Vite + (React/Vue/Vanilla/Solid/Svelte)
+- **Styling**: If using Tailwind CSS, you MUST include `tailwind.config.js` and `postcss.config.js` in the output to ensure utility classes are processed correctly.
 - **Deployment**: Use `vite build --base ./` so it can be served from any subdirectory
 - **Static Assets**: Root `index.html` should be rendered/processed by Vite; do not rely on raw `fetch` for local files in a way that breaks on file:// or strict static servers
 - **Manifest**: Update `manifest.json` with current project metadata (title, description, date, tags, theme categories)
