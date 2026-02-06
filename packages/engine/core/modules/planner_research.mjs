@@ -119,9 +119,21 @@ async function callLLM(prompt, config, _role = 'system') {
 
 // Step 1: Brainstorm unexpected domains
 async function phaseBroaden(config) {
-  console.log('[Agent:Phase1] Broadening horizons...');
+  console.log('[Agent:Phase1] Broadening horizons (Global + Local)...');
+
+  // Evolution (A): Load yesterday's report to avoid repetition
+  let previousTrends = "";
+  try {
+    previousTrends = await fs.readFile(TRENDS_REPORT, 'utf8');
+    previousTrends = "RECENT TRENDS ANALYZED YESTERDAY:\n" + previousTrends.slice(0, 1000);
+  } catch (e) {
+    console.warn(`[Agent:Phase1] Failed to load previous trends: ${e.message}`);
+  }
+
   const prompt = `
-  Generate 4 search queries to discover emerging digital tool trends or unsolved needs.
+  ${previousTrends}
+
+  Task: Generate 6 search queries to discover emerging digital tool trends or unsolved needs.
   
   Primary Engine Categories: [AI (人工智能), System (系统性能), Network (网络通信), Game (游戏机制), Productivity (生产力)].
   
@@ -132,17 +144,19 @@ async function phaseBroaden(config) {
   
   Constraints:
   1. Pick 1 "Primary Category" and mix it with 1-2 "Apple Niches".
-  2. For example: "System" + "Music" tools, or "AI" + "Finance" utilities.
-  3. Formulate specific search queries to find unique, non-generic utilities.
+  2. DIVERSIFY: Ensure queries do NOT repeat the themes found in "RECENT TRENDS ANALYZED YESTERDAY".
+  3. LANGUAGE MIX: Generate 3 queries in English (global innovators like Product Hunt/Indie Hackers) and 3 queries in ${LANG} (local pain points).
+  4. Formulate specific search queries to find unique, non-generic utilities.
   
-  Output JSON ONLY: ["query1", "query2", "query3", "query4"]
+  Output JSON ONLY: ["query1", "query2", ...]
   `;
   const json = await callLLM(prompt, config);
   try {
-    const queries = JSON.parse(json.match(/\[.*\]/s)[0]);
-    return queries;
+    const match = json.match(/\[.*\]/s);
+    if (!match) throw new Error("No JSON array found");
+    return JSON.parse(match[0]);
   } catch {
-    return ["innovative system monitoring utilities for macOS/iOS 2026", "productivity tools with spatial computing integration", "AI-driven local-first creative workflows", "multiplayer networking mechanics for browser utilities"];
+    return ["innovative system monitoring utilities for macOS/iOS 2026", "productivity tools with spatial computing integration", "AI语音转MIDI生成器 技术现状", "移动端大文件清理 痛点分析"];
   }
 }
 
@@ -156,11 +170,25 @@ async function phaseResearch(queries, config) {
     const results = await braveSearch(q, config.braveKey);
     if (results.length === 0) continue;
     
-    // Pick top 2 results to scrape
-    const top2 = results.slice(0, 2);
+    // Evolution (B): Smarter selection. Pick top 4, then have LLM select top 2 most relevant or non-spammy
+    const candidateList = results.slice(0, 4).map((r, i) => `${i}: ${r.title} - ${r.url} - ${r.description}`).join('\n');
+    const selectPrompt = `From this search result list, return the indices of the TWO most insightful and high-quality unique sources for technical inspiration. Discard pure SEO spam. JSON ONLY: [0, 1]
+    Results:\n${candidateList}`;
+    
+    let picks = [0, 1];
+    try {
+      const resp = await callLLM(selectPrompt, config.azure);
+      const match = resp.match(/\[.*\]/);
+      if (match) picks = JSON.parse(match[0]);
+    } catch (e) {
+      console.warn(`[Agent:Phase2] Source selection failed: ${e.message}`);
+    }
+
     context += `\n### Search Query: ${q}\n`;
     
-    for (const r of top2) {
+    for (const idx of picks) {
+      const r = results[idx];
+      if (!r) continue;
       sources.push({ title: r.title, url: r.url });
       const content = await fetchPageContent(r.url);
       if (content.length > 200) {
@@ -178,13 +206,15 @@ async function phaseResearch(queries, config) {
 async function phaseIdeate(researchContext, config) {
   console.log('[Agent:Phase3] Generating Concepts...');
   const prompt = `
-  Context from App Research:
+  Context from Global & Local App Research:
   ${researchContext.slice(0, 10000)}
 
   Task:
   Generate 6 "Micro-App" ideas focusing on high-quality, professional, and "Juicy" interactions.
   
-  IMPORTANT: All fields in the JSON (title, hudScenario, output, mockDataStrategy, demoStartState, etc.) MUST be written in ${LANG}. The app names and descriptions should be natural and professional in this language.
+  IMPORTANT: The input context may contain English research findings. You must DIGEST and TRANSLATE them. 
+  All fields in the resulting JSON (title, hudScenario, output, mockDataStrategy, demoStartState, etc.) MUST be written in ${LANG}. 
+  The app names and descriptions should be natural, professional, and localized for a ${LANG} speaking audience.
   
   Philosophy: "Simple, Fast, Tactile, Self-Contained".
   
@@ -230,24 +260,25 @@ async function phaseIdeate(researchContext, config) {
 
 // Step 5: Reflect & Filter (The "Critic" Persona)
 async function phaseReflect(rawIdeasJson, config) {
-  console.log('[Agent:Phase4] Reflecting and Refining...');
+  console.log('[Agent:Phase4] Reflecting and Refining (Tech Stack Check)...');
   const prompt = `
   Review these ideas:
   ${rawIdeasJson}
 
   Critique Criteria:
   1. Is it too boring? (e.g. just a form). We want "Juicy" and "Tactile" apps.
-  2. Is it too complex? (e.g. needs real backend).
+  2. Evolution (C): TECH REASONABILITY. Can this be built with React 18 + Tailwind WITHOUT a real backend? 
+     - If it requires native binary APIs (e.g. registry editing, low-level driver access), can it be REWRITTEN as a Simulation? 
+     - If it's IMPOSSIBLE in browser, DISCARD.
   3. Category Alignment: Does at least one word in "keywords" match [ai, system, network, game, productivity]?
-  4. Detail check: "coreInteractions" and "selfHealing" must be descriptive sentences, not just single words or gestures.
+  4. Detail check: "coreInteractions" and "selfHealing" must be descriptive sentences.
   
   IMPORTANT: The final output MUST be in ${LANG}.
 
   Action:
   - Keep the good ones.
   - REWRITE the boring ones to be more "Juicy" or "Interactive".
-  - ENRICH the sparse fields (especially coreInteractions and selfHealing) if they are too brief.
-  - DISCARD the impossible ones.
+  - DISCARD the impossible ones (e.g. hardware-level drivers that can't be simulated).
   - Return the final filtered list as JSON.
   `;
   return callLLM(prompt, config.azure);
