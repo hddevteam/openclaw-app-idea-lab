@@ -129,6 +129,10 @@ async function main() {
   const scenario = idea?.scenario || idea?.hudScenario || idea?.desc || idea?.description || '';
   const ideaId = idea?.id;
 
+  // Stability logic: Fixed tech stack to reduce build failures and ensure reliable output
+  const chosenStyling = 'Tailwind CSS (standard v3 via PostCSS)';
+  const chosenUI = 'React 18';
+
   try {
     await writeBuildStatus('running', { title, outId, progress: 10, stage: 'coding' });
 
@@ -139,7 +143,7 @@ async function main() {
     `- Scenario: ${scenario}`,
     `\nMandatory Technical Standards:`,
     `- Read and strictly follow ALL standards in DAILY_SPEC.md.`,
-    `- Tech stack: React 18 + Tailwind CSS (v3).`,
+    `- Tech stack: ${chosenUI} + ${chosenStyling}.`,
     `- CRITICAL STYLE: You MUST provide 'tailwind.config.js' and 'postcss.config.js'. Use professional, elegant styling (Glassmorphism, gradients, consistent spacing).`,
     `- CRITICAL INTERACTION: Follow "Drag & Drop Safety" in DAILY_SPEC.md. Use 'framer-motion' for physics and animations.`,
     `- Language: Use ${LANG} for ALL UI and content.`,
