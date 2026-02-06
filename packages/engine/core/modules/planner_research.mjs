@@ -96,23 +96,31 @@ async function callLLM(prompt, config, _role = 'system') {
   const model = models.find(m => m.id === MODEL) || models[0];
   const url = `${baseUrl.replace(/\/+$/, '')}/chat/completions`;
   
-  const res = await fetch(url, {
-    method: 'POST',
-    headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${apiKey}` },
-    body: JSON.stringify({
-      model: model.id,
-      messages: [
-        { role: 'system', content: `You are an advanced creative agent. You specialize in "Combinatorial Innovation". All your written output and analysis MUST be in ${LANG}.` },
-        { role: 'user', content: prompt }
-      ],
-      temperature: 0.85 // High creativity
-    })
-  });
+  const controller = new AbortController();
+  const id = setTimeout(() => controller.abort(), 120000); // 120s timeout for LLM
 
-  const raw = await res.text();
-  if (!res.ok) throw new Error(`LLM Error: ${raw.slice(0, 100)}`);
-  const data = JSON.parse(raw);
-  return data.choices[0].message.content;
+  try {
+    const res = await fetch(url, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${apiKey}` },
+      signal: controller.signal,
+      body: JSON.stringify({
+        model: model.id,
+        messages: [
+          { role: 'system', content: `You are an advanced creative agent. You specialize in "Combinatorial Innovation". All your written output and analysis MUST be in ${LANG}.` },
+          { role: 'user', content: prompt }
+        ],
+        temperature: 0.85 // High creativity
+      })
+    });
+
+    const raw = await res.text();
+    if (!res.ok) throw new Error(`LLM Error: ${raw.slice(0, 100)}`);
+    const data = JSON.parse(raw);
+    return data.choices[0].message.content;
+  } finally {
+    clearTimeout(id);
+  }
 }
 
 // --- Agent Workflow ---

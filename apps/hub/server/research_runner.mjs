@@ -1,6 +1,6 @@
 import { spawn } from 'node:child_process';
 
-export function runPlannerResearch({ labRoot, timeoutMs = 300000 }){
+export function runPlannerResearch({ labRoot, timeoutMs = 600000 }){
   return new Promise((resolve, reject) => {
     const child = spawn('node', ['core/modules/planner_research.mjs'], {
       cwd: labRoot,

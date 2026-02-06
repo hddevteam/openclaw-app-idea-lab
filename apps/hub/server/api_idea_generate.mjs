@@ -24,7 +24,7 @@ export async function handleIdeaGenerate(req, res, { labRuntime, labRoot }){
   const refreshResearch = input.refreshResearch === true;
   if (refreshResearch) {
     try {
-      await runPlannerResearch({ labRoot, timeoutMs: 300000 });
+      await runPlannerResearch({ labRoot, timeoutMs: 600000 });
     } catch (err) {
       console.warn('Failed to refresh research data:', err.message);
     }
@@ -95,7 +95,7 @@ Return ONLY valid JSON with schema (all string fields must be in ${LANG}):
     apiKey,
     model,
     input: prompt,
-    timeoutMs: 90000,
+    timeoutMs: 120000,
   });
 
   const text = extractTextFromResponse(resp);
