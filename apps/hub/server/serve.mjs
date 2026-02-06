@@ -192,9 +192,9 @@ const server = http.createServer(async (req, res) => {
       const raw = await (await import('node:fs/promises')).readFile(p, 'utf8');
       res.writeHead(200, { 'Content-Type': 'application/json; charset=utf-8' });
       res.end(raw);
-    }catch(e){
+    }catch(_e){
       res.writeHead(404, { 'Content-Type': 'application/json; charset=utf-8' });
-      res.end(JSON.stringify({ ok:false, error: String(e?.message||e) }));
+      res.end(JSON.stringify({ ok:false, error: String(_e?.message||_e) }));
     }
     return;
   }
@@ -204,9 +204,35 @@ const server = http.createServer(async (req, res) => {
       const raw = await (await import('node:fs/promises')).readFile(p, 'utf8');
       res.writeHead(200, { 'Content-Type': 'text/markdown; charset=utf-8' });
       res.end(raw);
+    }catch(_e){
+      res.writeHead(200, { 'Content-Type': 'text/markdown; charset=utf-8' });
+      res.end('');
+    }
+    return;
+  }
+  if(url.pathname === '/api/research-index' && req.method === 'GET'){
+    try{
+      const p = path.join(LAB_RUNTIME, 'data', 'research_index.md');
+      const raw = await (await import('node:fs/promises')).readFile(p, 'utf8');
+      res.writeHead(200, { 'Content-Type': 'text/markdown; charset=utf-8' });
+      res.end(raw);
+    }catch(_e){
+      res.writeHead(200, { 'Content-Type': 'text/markdown; charset=utf-8' });
+      res.end('');
+    }
+    return;
+  }
+  if(url.pathname === '/api/research-log' && req.method === 'GET'){
+    try{
+      const name = url.searchParams.get('name');
+      if(!name || !name.endsWith('.md')) throw new Error('invalid name');
+      const p = path.join(LAB_RUNTIME, 'data', 'research_logs', path.basename(name));
+      const raw = await (await import('node:fs/promises')).readFile(p, 'utf8');
+      res.writeHead(200, { 'Content-Type': 'text/markdown; charset=utf-8' });
+      res.end(raw);
     }catch(e){
       res.writeHead(404, { 'Content-Type': 'application/json; charset=utf-8' });
-      res.end(JSON.stringify({ ok:false, error: 'Report not found' }));
+      res.end(JSON.stringify({ ok:false, error: String(e?.message||e) }));
     }
     return;
   }
@@ -311,7 +337,9 @@ const server = http.createServer(async (req, res) => {
     try {
       const s = await (await import('node:fs/promises')).stat(distDir);
       if (s.isDirectory()) useDist = true;
-    } catch {}
+    } catch (_e) {
+      // Ignored: directory check failed
+    }
 
     const mapped = useDist 
       ? safeJoin(distDir, rest || '/index.html') 

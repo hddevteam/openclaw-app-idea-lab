@@ -6,6 +6,8 @@ import {
   fetchFiltered, 
   fetchManifest, 
   fetchTrendsReport,
+  fetchResearchIndex,
+  fetchResearchLog,
   generateIdeas, 
   runResearch,
   saveToQueue,
@@ -22,9 +24,41 @@ import { FeedbackModal } from './components/FeedbackModal';
 import { BuildProgress } from './components/BuildProgress';
 
 import { IdeaCard } from './components/IdeaCard';
-import { LayoutGrid, History, Calendar, CheckCircle2, Save, Trash2, X, AlertCircle, Loader2, Search, SortAsc, BookOpen, BrainCircuit } from 'lucide-react';
+import { LayoutGrid, History, Calendar, CheckCircle2, Save, Trash2, X, AlertCircle, Loader2, Search, SortAsc, BookOpen, BrainCircuit, Archive } from 'lucide-react';
 import { clsx } from 'clsx';
 import ReactMarkdown from 'react-markdown';
+import remarkGfm from 'remark-gfm';
+
+const MarkdownComponents = {
+  a: ({href, children}: { href?: string; children?: React.ReactNode }) => (
+    <a 
+      href={href} 
+      target="_blank" 
+      rel="noopener noreferrer"
+      className="inline-flex items-center gap-1 px-2 py-0.5 bg-blue-50 dark:bg-blue-900/30 text-blue-600 dark:text-blue-400 rounded-md border border-blue-100 dark:border-blue-900/30 hover:bg-blue-100 dark:hover:bg-blue-900/50 transition-all no-underline font-bold text-[10px] my-0.5 align-middle"
+    >
+      <Search size={10} />
+      {children}
+    </a>
+  ),
+  table: ({children}: { children?: React.ReactNode }) => (
+    <div className="my-4 overflow-x-auto rounded-xl border border-gray-100 dark:border-gray-800 shadow-sm">
+      <table className="min-w-full divide-y divide-gray-200 dark:divide-gray-800 bg-white/50 dark:bg-transparent">
+        {children}
+      </table>
+    </div>
+  ),
+  th: ({children}: { children?: React.ReactNode }) => (
+    <th className="px-4 py-2 bg-gray-50 dark:bg-gray-800/50 text-left text-[10px] font-black uppercase tracking-widest text-gray-500">
+      {children}
+    </th>
+  ),
+  td: ({children}: { children?: React.ReactNode }) => (
+    <td className="px-4 py-3 text-xs border-t border-gray-100 dark:border-gray-800 leading-relaxed font-medium">
+      {children}
+    </td>
+  )
+};
 
 function localYYYYMMDD(d = new Date()) {
   const yyyy = d.getFullYear();
@@ -44,7 +78,10 @@ export function App() {
   // Lab State
   const [ideas, setIdeas] = useState<Idea[]>([]);
   const [trendsReport, setTrendsReport] = useState<string>('');
+  const [researchIndex, setResearchIndex] = useState<string>('');
   const [showReport, setShowReport] = useState(false);
+  const [showHistory, setShowHistory] = useState(false);
+  const [selectedLog, setSelectedLog] = useState<{ name: string; content: string } | null>(null);
   const [labView, setLabView] = useState<'backlog' | 'filtered' | 'built'>('backlog');
   const [loading, setLoading] = useState(false);
   const [search, setSearch] = useState('');
@@ -99,12 +136,14 @@ export function App() {
   const fetchLabIdeas = async (view: 'backlog' | 'filtered' | 'built') => {
     setLoading(true);
     try {
-      const [list, report] = await Promise.all([
+      const [list, report, index] = await Promise.all([
         (view === 'backlog' || view === 'built') ? fetchBacklog() : fetchFiltered(),
-        fetchTrendsReport().catch(() => '')
+        fetchTrendsReport().catch(() => ''),
+        fetchResearchIndex().catch(() => '')
       ]);
       setIdeas(list);
       setTrendsReport(report);
+      setResearchIndex(index);
     } catch (_err) {
       showToast('Failed to load ideas', 'error');
     } finally {
@@ -112,7 +151,16 @@ export function App() {
     }
   };
 
-  const handleGenerate = async (prefs: { themes: string[]; form: string; strictness: number }) => {
+  const handleOpenLog = async (name: string) => {
+    try {
+      const content = await fetchResearchLog(name);
+      setSelectedLog({ name, content });
+    } catch (_err) {
+      showToast('Log not found', 'error');
+    }
+  };
+
+  const handleGenerate = async (prefs: { refreshResearch?: boolean; tags?: string[] }) => {
     setLoading(true);
     try {
       const list = await generateIdeas(prefs);
@@ -495,9 +543,81 @@ export function App() {
                     <X size={18} className="sm:size-5 text-purple-600" />
                   </button>
                 </div>
-                <div className="prose prose-xs sm:prose-sm dark:prose-invert max-w-none prose-p:leading-relaxed prose-headings:font-bold prose-headings:text-purple-900 dark:prose-headings:text-purple-300 overflow-x-auto">
-                  <ReactMarkdown>{trendsReport}</ReactMarkdown>
+                <div className="prose prose-xs sm:prose-sm dark:prose-invert max-w-none prose-p:leading-relaxed prose-headings:font-bold prose-headings:text-purple-900 dark:prose-headings:text-purple-300">
+                  <ReactMarkdown remarkPlugins={[remarkGfm]} components={MarkdownComponents}>{trendsReport}</ReactMarkdown>
                 </div>
+              </div>
+            )}
+
+            {/* Research History / Index Section */}
+            {showHistory && (
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                {/* Index List */}
+                <div className="p-4 sm:p-8 rounded-[24px] sm:rounded-[32px] bg-amber-50 dark:bg-amber-900/10 border border-amber-100 dark:border-amber-800/30 animate-in slide-in-from-left duration-500 overflow-hidden">
+                  <div className="flex items-center gap-3 mb-4 sm:mb-6">
+                    <div className="p-1.5 sm:p-2 rounded-lg sm:rounded-xl bg-amber-600 text-white shrink-0">
+                      <Archive size={18} className="sm:size-5" />
+                    </div>
+                    <div className="min-w-0 flex-1">
+                      <h2 className="text-sm sm:text-lg font-bold truncate text-amber-900 dark:text-amber-100">Research Archives</h2>
+                      <p className="text-[9px] sm:text-xs text-amber-600 dark:text-amber-400 font-bold uppercase tracking-widest">History & Context</p>
+                    </div>
+                    <button onClick={() => setShowHistory(false)} className="ml-auto p-1.5 sm:p-2 hover:bg-amber-200 dark:hover:bg-amber-800/50 rounded-full transition-colors shrink-0">
+                      <X size={18} className="sm:size-5 text-amber-600" />
+                    </button>
+                  </div>
+                  <div className="prose prose-xs sm:prose-sm dark:prose-invert max-w-none prose-p:leading-relaxed prose-headings:font-bold prose-headings:text-amber-900 dark:prose-headings:text-amber-300 overflow-y-auto max-h-[500px]">
+                    <ReactMarkdown 
+                      remarkPlugins={[remarkGfm]}
+                      components={{
+                        ...MarkdownComponents,
+                        a: ({href, children}) => (
+                          <button 
+                            onClick={(e) => {
+                              e.preventDefault();
+                              if (href?.includes('.md')) {
+                                const logName = href.split('/').pop() || '';
+                                handleOpenLog(logName);
+                              }
+                            }}
+                            className="text-blue-600 dark:text-blue-400 hover:text-blue-700 underline font-extrabold transition-all bg-blue-100/50 dark:bg-blue-900/40 px-3 py-1.5 rounded-xl text-[10px] sm:text-xs inline-flex items-center gap-2 border border-blue-200 dark:border-blue-800/50 shadow-sm active:scale-95"
+                          >
+                            <BookOpen size={12} />
+                            {children}
+                          </button>
+                        )
+                      }}
+                    >
+                      {researchIndex || 'No archives found yet. Generating ideas will create snapshots.'}
+                    </ReactMarkdown>
+                  </div>
+                </div>
+
+                {/* Selected Log Content */}
+                {selectedLog ? (
+                  <div className="p-4 sm:p-8 rounded-[24px] sm:rounded-[32px] bg-white dark:bg-[#1c1c1e] border border-gray-100 dark:border-gray-800 shadow-sm animate-in slide-in-from-right duration-500 overflow-hidden relative">
+                    <div className="flex items-center gap-3 mb-4 sm:mb-6">
+                      <div className="p-1.5 sm:p-2 rounded-lg sm:rounded-xl bg-gray-100 text-gray-600 shrink-0">
+                        <BookOpen size={18} className="sm:size-5" />
+                      </div>
+                      <div className="min-w-0">
+                        <h2 className="text-sm sm:text-lg font-bold truncate">{selectedLog.name}</h2>
+                        <p className="text-[9px] sm:text-xs text-gray-500 font-bold uppercase tracking-widest">Archived Snapshot</p>
+                      </div>
+                      <button onClick={() => setSelectedLog(null)} className="ml-auto p-1.5 sm:p-2 hover:bg-gray-100 rounded-full transition-colors shrink-0">
+                        <X size={18} className="sm:size-5 text-gray-400" />
+                      </button>
+                    </div>
+                    <div className="prose prose-xs sm:prose-sm dark:prose-invert max-w-none prose-p:leading-relaxed overflow-y-auto max-h-[500px]">
+                      <ReactMarkdown remarkPlugins={[remarkGfm]} components={MarkdownComponents}>{selectedLog.content}</ReactMarkdown>
+                    </div>
+                  </div>
+                ) : (
+                  <div className="hidden md:flex flex-col items-center justify-center p-8 rounded-[32px] border-2 border-dashed border-gray-100 dark:border-gray-800 text-gray-300">
+                    <Archive size={48} className="mb-4 opacity-20" />
+                    <p className="text-sm font-medium">Select a snapshot from the index to view</p>
+                  </div>
+                )}
               </div>
             )}
 
@@ -552,7 +672,10 @@ export function App() {
                 )}
 
                 <button 
-                  onClick={() => setShowReport(!showReport)}
+                  onClick={() => {
+                    setShowReport(!showReport);
+                    if (!showReport) setShowHistory(false);
+                  }}
                   className={clsx(
                     "flex items-center gap-2 px-3 sm:px-4 py-2 sm:py-2.5 rounded-xl text-[10px] sm:text-[11px] font-bold uppercase tracking-widest transition-all shrink-0",
                     showReport ? "bg-purple-600 text-white shadow-lg shadow-purple-500/30" : "bg-[#f5f5f7] dark:bg-[#2d2d2f] text-gray-500 hover:bg-gray-200"
@@ -561,6 +684,22 @@ export function App() {
                   <BookOpen size={13} className="sm:size-3.5" />
                   <span className="hidden sm:inline">Trends</span>
                   <span className="sm:hidden">Trends</span>
+                </button>
+
+                <button 
+                  onClick={() => {
+                    setShowHistory(!showHistory);
+                    if (!showHistory) setShowReport(false);
+                    setSelectedLog(null);
+                  }}
+                  className={clsx(
+                    "flex items-center gap-2 px-3 sm:px-4 py-2 sm:py-2.5 rounded-xl text-[10px] sm:text-[11px] font-bold uppercase tracking-widest transition-all shrink-0",
+                    showHistory ? "bg-amber-600 text-white shadow-lg shadow-amber-500/30" : "bg-[#f5f5f7] dark:bg-[#2d2d2f] text-gray-500 hover:bg-gray-200"
+                  )}
+                >
+                  <Archive size={13} className="sm:size-3.5" />
+                  <span className="hidden sm:inline">Archives</span>
+                  <span className="sm:hidden">Index</span>
                 </button>
 
                 {selectedTag && (

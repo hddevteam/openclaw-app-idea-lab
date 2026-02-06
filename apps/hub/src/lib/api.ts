@@ -25,7 +25,7 @@ export async function fetchBuildStatus(): Promise<BuildStatus> {
 export async function fetchFeedback(date: string): Promise<Feedback | null> {
   const r = await fetch('/api/feedback?date=' + encodeURIComponent(date));
   if (!r.ok) throw new Error(`feedback http ${r.status}`);
-  const j = (await r.json()) as any;
+  const j = (await r.json()) as { ok: boolean; data?: Feedback };
   return j?.ok ? (j.data as Feedback | null) : null;
 }
 
@@ -41,7 +41,7 @@ export async function saveFeedback(input: {
     body: JSON.stringify(input),
   });
   if (!r.ok) throw new Error(`feedback http ${r.status}`);
-  const j = (await r.json()) as any;
+  const j = (await r.json()) as { ok: boolean; data?: Feedback; error?: string };
   if (!j?.ok) throw new Error(j?.error || 'save failed');
   return j.data as Feedback;
 }
@@ -51,7 +51,7 @@ export async function restoreIdea(id: string): Promise<void> {
     method: 'POST',
   });
   if (!r.ok) throw new Error(`restore http ${r.status}`);
-  const j = (await r.json()) as any;
+  const j = (await r.json()) as { ok: boolean; error?: string };
   if (!j?.ok) throw new Error(j?.error || 'restore failed');
 }
 
@@ -64,7 +64,7 @@ export async function restoreIdeaFromFiltered(id: string): Promise<void> {
   try {
     const j = JSON.parse(text);
     if (!j?.ok) throw new Error(j?.error || 'filtered restore failed');
-  } catch (e) {
+  } catch (_e) {
     console.error('Failed to parse response as JSON:', text);
     throw new Error('Server returned invalid JSON. See console for details.');
   }
@@ -79,7 +79,7 @@ export async function restoreIdeaStatus(id: string): Promise<void> {
   try {
     const j = JSON.parse(text);
     if (!j?.ok) throw new Error(j?.error || 'status restore failed');
-  } catch (e) {
+  } catch (_e) {
     console.error('Failed to parse response as JSON:', text);
     throw new Error('Server returned invalid JSON. See console for details.');
   }
@@ -98,6 +98,18 @@ export async function fetchTrendsReport(): Promise<string> {
   return await r.text();
 }
 
+export async function fetchResearchIndex(): Promise<string> {
+  const r = await fetch('/api/research-index');
+  if (!r.ok) throw new Error(`research index http ${r.status}`);
+  return await r.text();
+}
+
+export async function fetchResearchLog(name: string): Promise<string> {
+  const r = await fetch(`/api/research-log?name=${encodeURIComponent(name)}`);
+  if (!r.ok) throw new Error(`research log http ${r.status}`);
+  return await r.text();
+}
+
 export async function fetchFiltered(): Promise<Idea[]> {
   const r = await fetch('/api/idea-filtered');
   if (!r.ok) throw new Error(`filtered http ${r.status}`);
@@ -105,7 +117,7 @@ export async function fetchFiltered(): Promise<Idea[]> {
   return j.ideas || [];
 }
 
-export async function generateIdeas(prefs: any): Promise<Idea[]> {
+export async function generateIdeas(prefs: { refreshResearch?: boolean; tags?: string[] }): Promise<Idea[]> {
   const r = await fetch('/api/idea-generate', {
     method: 'POST',
     headers: { 'Content-Type': 'application/json' },

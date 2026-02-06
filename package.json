@@ -18,7 +18,8 @@
     "*.{js,mjs,ts,tsx}": "eslint --fix"
   },
   "dependencies": {
-    "dotenv": "^17.2.3"
+    "dotenv": "^17.2.3",
+    "remark-gfm": "^4.0.1"
   },
   "devDependencies": {
     "@eslint/js": "^9.39.2",

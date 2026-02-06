@@ -7,6 +7,7 @@ interface LabPrefs {
   styles: string[];
   form: string;
   strictness: number;
+  refreshResearch: boolean;
 }
 
 interface NavBarProps {
@@ -40,7 +41,8 @@ export const NavBar: React.FC<NavBarProps> = ({
     categories: ['Utilities'],
     styles: ['Tactile', 'Glassmorphism'],
     form: 'ui-template',
-    strictness: 0.78
+    strictness: 0.78,
+    refreshResearch: false
   });
 
   const handleToggleCategory = (cat: string) => {
@@ -226,7 +228,9 @@ export const NavBar: React.FC<NavBarProps> = ({
               </div>
 
               <div className="space-y-3">
-                <label className="text-[10px] font-bold text-gray-400 uppercase tracking-widest">Product Form</label>
+                <div className="flex items-center gap-2">
+                  <label className="text-[10px] font-bold text-gray-400 uppercase tracking-widest">Product Form</label>
+                </div>
                 <select 
                   value={prefs.form}
                   onChange={e => setPrefs(p => ({ ...p, form: e.target.value }))}
@@ -237,6 +241,12 @@ export const NavBar: React.FC<NavBarProps> = ({
                   <option value="component">Component Prototype</option>
                   <option value="simulator">Simulation/Viz</option>
                 </select>
+                <p className="text-[9px] text-gray-400 font-medium leading-tight max-w-[180px]">
+                  {prefs.form === 'ui-template' && "Focus on animations and UI feel."}
+                  {prefs.form === 'tool' && "Functional utility with input/output."}
+                  {prefs.form === 'component' && "Reusable logic or UI building block."}
+                  {prefs.form === 'simulator' && "Data visualizer or concept sandbox."}
+                </p>
               </div>
             </div>
 
@@ -259,6 +269,29 @@ export const NavBar: React.FC<NavBarProps> = ({
                     </button>
                   ))}
                 </div>
+              </div>
+
+              <div className="space-y-3">
+                <label className="text-[10px] font-bold text-gray-400 uppercase tracking-widest">Deep Research</label>
+                <div className="flex items-center gap-3">
+                  <button
+                    onClick={() => setPrefs(p => ({ ...p, refreshResearch: !p.refreshResearch }))}
+                    className={clsx(
+                      "w-10 h-5 rounded-full transition-colors relative",
+                      prefs.refreshResearch ? "bg-blue-600" : "bg-gray-200 dark:bg-gray-700"
+                    )}
+                  >
+                    <div className={clsx(
+                      "absolute top-1 w-3 h-3 rounded-full bg-white transition-all shadow-sm",
+                      prefs.refreshResearch ? "left-6" : "left-1"
+                    )} />
+                  </button>
+                  <span className="text-xs font-bold text-gray-500">{prefs.refreshResearch ? 'Always Fresh' : 'Cached Trend'}</span>
+                </div>
+                <p className="text-[9px] text-gray-400 font-medium leading-tight max-w-[150px]">
+                  Enabled: Search web for new trends (+60s).<br/>
+                  Disabled: Reuse latest trends report.
+                </p>
               </div>
 
               <div className="space-y-3">

@@ -34,3 +34,4 @@ pnpm-debug.log*
 # AI / Developer Tools
 .aider*
 .aider/
+runtime-hub.pid

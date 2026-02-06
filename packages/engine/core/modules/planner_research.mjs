@@ -11,6 +11,7 @@ const ROOT = path.resolve(process.env.DAILY_APP_LAB_ROOT || path.resolve(HERE, '
 const DATA = path.join(ROOT, 'runtime', 'data');
 const BACKLOG = path.join(DATA, 'idea_backlog.json');
 const TRENDS_REPORT = path.join(DATA, 'trends_report.md');
+const SOURCES_DATA = path.join(DATA, 'idea_sources.json');
 const RAG_INDEX = path.join(DATA, 'rag_projects_index.json');
 const CLAW_CONFIG = process.env.CLAWDBOT_CONFIG || path.join(os.homedir(), '.openclaw', 'clawdbot.json');
 
@@ -149,6 +150,7 @@ async function phaseBroaden(config) {
 async function phaseResearch(queries, config) {
   console.log('[Agent:Phase2] Executing Deep Research...');
   let context = "";
+  const sources = [];
   
   for (const q of queries) {
     const results = await braveSearch(q, config.braveKey);
@@ -159,6 +161,7 @@ async function phaseResearch(queries, config) {
     context += `\n### Search Query: ${q}\n`;
     
     for (const r of top2) {
+      sources.push({ title: r.title, url: r.url });
       const content = await fetchPageContent(r.url);
       if (content.length > 200) {
         context += `- Source: ${r.title} (${r.url})\n  Content: ${content}\n`;
@@ -168,7 +171,7 @@ async function phaseResearch(queries, config) {
       await sleep(1000);
     }
   }
-  return context;
+  return { context, sources };
 }
 
 // Step 4: Ideate
@@ -265,6 +268,7 @@ async function phaseSummarize(researchContext, config) {
   3. Focus on "Micro-Apps" and "Combinatorial Innovation".
   4. Include 3-4 key trend pillars with brief descriptions.
   5. Suggest 2-3 "Wildcard" ideas that bridge unexpected categories.
+  6. **CRITICAL: Include a "References & Sources" section at the end with [Title](URL) links for all major facts mentioned.**
   
   Output ONLY the Markdown content.
   `;
@@ -279,13 +283,17 @@ async function main() {
   console.log(`[Agent] Selected paths:`, queries);
   
   // 2. Research
-  const researchContext = await phaseResearch(queries, config);
+  const { context: researchContext, sources } = await phaseResearch(queries, config);
 
   // 3. Summarize Trends
   const trendsReport = await phaseSummarize(researchContext, config);
   await fs.writeFile(TRENDS_REPORT, trendsReport);
   console.log(`[Agent] Trends report updated: ${TRENDS_REPORT}`);
   
+  // Save sources for generator
+  await fs.writeFile(SOURCES_DATA, JSON.stringify({ updated: new Date().toISOString(), sources }, null, 2));
+  console.log(`[Agent] Sources data updated: ${SOURCES_DATA}`);
+
   // 4. Ideate
   const draftJson = await phaseIdeate(researchContext, config);
   
