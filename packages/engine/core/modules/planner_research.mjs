@@ -329,33 +329,6 @@ async function main() {
   await fs.writeFile(TRENDS_REPORT, trendsReport);
   console.log(`[Agent] Trends report updated: ${TRENDS_REPORT}`);
 
-  // Write a per-run research log (for auditability / history)
-  try {
-    const researchLogsDir = path.join(DATA, 'research_logs');
-    await fs.mkdir(researchLogsDir, { recursive: true });
-    const ts = new Date().toISOString().replace(/[:.]/g, '-');
-    const logPath = path.join(researchLogsDir, `research_${ts}.md`);
-    const logMd = [
-      `# Research run ${new Date().toISOString()}`,
-      ``,
-      `## Selected queries`,
-      '```json',
-      JSON.stringify(queries, null, 2),
-      '```',
-      ``,
-      `## Sources`,
-      ...(sources || []).map(s => `- [${s.title}](${s.url})`),
-      ``,
-      `## Trends report`,
-      trendsReport,
-      ``,
-    ].join('\n');
-    await fs.writeFile(logPath, logMd);
-    console.log(`[Agent] Research log written: ${logPath}`);
-  } catch (e) {
-    console.warn(`[Agent] Failed to write research log: ${e.message}`);
-  }
-  
   // Save sources for generator
   await fs.writeFile(SOURCES_DATA, JSON.stringify({ updated: new Date().toISOString(), sources }, null, 2));
   console.log(`[Agent] Sources data updated: ${SOURCES_DATA}`);
@@ -379,6 +352,45 @@ async function main() {
   }
 
   console.log(`[Agent] Finalized ${newIdeas.length} ideas.`);
+
+  // Write a per-run research log & Update central index
+  try {
+    const researchLogsDir = path.join(DATA, 'research_logs');
+    await fs.mkdir(researchLogsDir, { recursive: true });
+    const ts = new Date().toISOString().replace(/[:.]/g, '-');
+    const snapshotName = `research_${ts}.md`;
+    const logPath = path.join(researchLogsDir, snapshotName);
+    const logMd = [
+      `# Research run ${new Date().toISOString()}`,
+      ``,
+      `## Selected queries`,
+      '```json',
+      JSON.stringify(queries, null, 2),
+      '```',
+      ``,
+      `## Sources`,
+      ...(sources || []).map(s => `- [${s.title}](${s.url})`),
+      ``,
+      `## Trends report`,
+      trendsReport,
+      ``,
+    ].join('\n');
+    await fs.writeFile(logPath, logMd);
+    console.log(`[Agent] Research log written: ${logPath}`);
+
+    const indexPath = path.join(DATA, 'research_index.md');
+    const indexEntry = `| ${new Date().toLocaleString()} | [${snapshotName}](./research_logs/${snapshotName}) | ${queries.slice(0, 3).join(', ')} | AI-Native | ${newIdeas.length} |\n`;
+    let indexContent = '';
+    try {
+      indexContent = await fs.readFile(indexPath, 'utf8');
+    } catch {
+      indexContent = `# Research & Generation Index\n\n| Date | Report Link | Categories | Styles | Ideas |\n| :--- | :--- | :--- | :--- | :--- |\n`;
+    }
+    await fs.writeFile(indexPath, indexContent + indexEntry);
+    console.log(`[Agent] Research index updated: ${indexPath}`);
+  } catch (e) {
+    console.warn(`[Agent] Failed to write research log/index: ${e.message}`);
+  }
 
   // Dedupe & Save
   const backlogRaw = await fs.readFile(BACKLOG, 'utf8').catch(() => '{"ideas":[]}');
