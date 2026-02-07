@@ -225,13 +225,13 @@ Add motion and delight, vary the tooling:
   - **Three.js** / **WebGL** (3D visualizations)
 
 ### Design Languages
-Experiment with different visual aesthetics:
-  - **Glassmorphism** (frosted glass effects, backdrop-blur)
-  - **Neumorphism** (soft shadows, embossed)
-  - **Flat 3.0** (vibrant, bold colors, geometric)
-  - **Apple-style Minimal** (spacious, subtle gradients, SF-like typography)
-  - **Brutalism** (raw, asymmetric, high contrast)
-  - **Retro / Synthwave** (gradient meshes, neon, 80s inspired)
+Experiment with different visual aesthetics while maintaining a professional, high-end feel:
+  - **Refined Modern UI** (Subtle borders, purposeful whitespace, purposeful typography)
+  - **Bento Logic** (Organized grid layouts with clear visual hierarchy)
+  - **Tactile Surfaces** (Using light shadows and layered depths instead of heavy blurs)
+  - **Sophisticated Monochromatic** (Playing with textures and contrast within a tight palette)
+  - **Data-Driven Minimal** (Highlighting content through layout, not decoration)
+  - **Organic Textures** (Using soft earthy tones and rounded forms for wellness/nature apps)
 
 ## Design Constraints
 

@@ -153,7 +153,7 @@ async function main() {
     `- Tech stack: ${chosenUI} + ${chosenStyling}.`,
     `- CRITICAL THEME: Use the palette defined in 'theme.json'. Map these to CSS variables in your index.css:`,
     ...Object.entries(theme.palette.colors).map(([k, v]) => `  ${k}: ${v};`),
-    `- CRITICAL STYLE: You MUST provide 'tailwind.config.js' and 'postcss.config.js'. Use professional, elegant styling (Glassmorphism, gradients, consistent spacing). All primary UI elements (buttons, highlights, focus rings) must use the generated theme variables.`,
+    `- CRITICAL STYLE: You MUST provide 'tailwind.config.js' and 'postcss.config.js'. Use refined, modern UI styling (Subtle shadows, purposeful spacing, and clean typography). Avoid overused generic "AI-style" neon gradients or heavy glassmorphism unless it strictly fits the persona. All primary UI elements (buttons, highlights, focus rings) must use the generated theme variables.`,
     `- CRITICAL INTERACTION: Follow "Drag & Drop Safety" in DAILY_SPEC.md. Use 'framer-motion' for physics and animations.`,
     `- Language: Use ${LANG} for ALL UI and content.`,
     `- No external APIs. Use a "SimulationEngine" for all data.`,

@@ -4,44 +4,44 @@
 export const PRESETS = {
   professional: {
     name: 'Professional',
-    baseHue: [200, 230], // Blues/Teals
-    saturation: [65, 80],
+    baseHue: [210, 225], // Trustworthy Blues
+    saturation: [40, 60], // More muted, serious
     lightness: [45, 55],
-    analogous: 30,
+    analogous: 15, // Very tight color harmony
   },
   creative: {
     name: 'Creative',
-    baseHue: [260, 320], // Purples/Pinks
-    saturation: [75, 90],
+    baseHue: [260, 290], // Deep Purples
+    saturation: [60, 75],
     lightness: [50, 60],
-    analogous: 150, // Complementary colors
+    analogous: 120, // Distinct offset
   },
-  cyberpunk: {
-    name: 'Cyberpunk',
-    baseHue: [180, 200], // Cyan foundations
-    saturation: [85, 100],
+  tech: {
+    name: 'Tech',
+    baseHue: [190, 210], // Dark Blues/Slate
+    saturation: [50, 70],
     lightness: [40, 50],
-    analogous: -120, // Neon pink/purple accents
+    analogous: 30, // Subtle cyan/teal accents
   },
   nature: {
     name: 'Nature',
-    baseHue: [100, 150], // Greens
-    saturation: [50, 70],
-    lightness: [40, 50],
-    analogous: 40, // Earth tones
+    baseHue: [140, 165], // Sage/Forest greens
+    saturation: [30, 45], // Earthy/Natural
+    lightness: [35, 45],
+    analogous: 20,
   },
   vibrant: {
     name: 'Vibrant',
-    baseHue: [0, 60], // Reds/Oranges/Yellows
-    saturation: [80, 100],
+    baseHue: [10, 35], // Warm Oranges/Ambers
+    saturation: [70, 85],
     lightness: [50, 60],
-    analogous: 40,
+    analogous: 30,
   },
   minimal: {
     name: 'Minimal',
-    baseHue: [0, 360], // Any hue but...
-    saturation: [5, 15], // ...extremely desaturated
-    lightness: [20, 40],
+    baseHue: [200, 240], // Cool Grays
+    saturation: [2, 10], // Almost monochrome
+    lightness: [15, 30],
     analogous: 180,
   }
 };
@@ -53,12 +53,12 @@ export function guessPreset(title = '', scenario = '') {
   const text = (title + ' ' + scenario).toLowerCase();
 
   const rules = [
-    { id: 'nature', keywords: ['farm', 'plant', 'env', 'nature', 'green', 'tree', 'eco', 'garden', 'health', 'bio'] },
-    { id: 'cyberpunk', keywords: ['ai', 'agent', 'bot', 'cyber', 'system', 'terminal', 'tech', 'future', 'hack', 'code', 'packet', 'network'] },
-    { id: 'minimal', keywords: ['write', 'note', 'focus', 'clean', 'simple', 'minimal', 'pure', 'calm', '禅', 'text'] },
-    { id: 'vibrant', keywords: ['game', 'news', 'hot', 'fire', 'alert', 'social', 'play', 'fun', 'kids', 'shop', 'sale'] },
-    { id: 'professional', keywords: ['manage', 'tool', 'finance', 'dash', 'work', 'biz', 'stock', 'project', 'plan', 'task', 'job', 'bento'] },
-    { id: 'creative', keywords: ['art', 'music', 'video', 'photo', 'style', 'design', 'magic', 'dream', 'color', 'spark'] },
+    { id: 'nature', keywords: ['farm', 'plant', 'env', 'nature', 'green', 'tree', 'eco', 'garden', 'health', 'bio', 'leaf', 'wood'] },
+    { id: 'tech', keywords: ['ai', 'agent', 'bot', 'system', 'terminal', 'tech', 'future', 'hack', 'code', 'packet', 'network', 'data', 'security', 'cyber'] },
+    { id: 'minimal', keywords: ['write', 'note', 'focus', 'clean', 'simple', 'minimal', 'pure', 'calm', '禅', 'text', 'book'] },
+    { id: 'vibrant', keywords: ['game', 'news', 'hot', 'fire', 'alert', 'social', 'play', 'fun', 'kids', 'shop', 'sale', 'fast', 'food'] },
+    { id: 'professional', keywords: ['manage', 'tool', 'finance', 'dash', 'work', 'biz', 'stock', 'project', 'plan', 'task', 'job', 'bento', 'chart', 'crm'] },
+    { id: 'creative', keywords: ['art', 'music', 'video', 'photo', 'style', 'design', 'magic', 'dream', 'color', 'spark', 'creative', 'gallery'] },
   ];
 
   for (const rule of rules) {
@@ -95,24 +95,25 @@ export function generateTheme(seedString, presetId = 'professional') {
 
   // HSL strings
   const primary = `hsl(${hue}, ${saturation}%, ${lightness}%)`;
-  const primaryLight = `hsl(${hue}, ${saturation}%, ${lightness + 15}%)`;
-  const primaryDark = `hsl(${hue}, ${saturation}%, ${lightness - 15}%)`;
+  const primaryLight = `hsl(${hue}, ${saturation}%, ${lightness + 10}%)`;
+  const primaryDark = `hsl(${hue}, ${saturation}%, ${lightness - 10}%)`;
 
   // Complementary or Analogous color for accents based on preset shift
-  const secondaryHue = (hue + preset.analogous + (seed % 30)) % 360;
-  const secondary = `hsl(${secondaryHue}, ${saturation - 10}%, ${lightness}%)`;
+  // We keep the secondary much closer to primary for sophistication unless it's creative/minimal
+  const shift = preset.analogous;
+  const secondaryHue = (hue + shift + (seed % 10)) % 360;
+  const secondarySaturation = Math.max(10, saturation - 15);
+  const secondary = `hsl(${secondaryHue}, ${secondarySaturation}%, ${lightness}%)`;
 
-  const accentSoft = `hsla(${hue}, ${saturation}%, ${lightness}%, 0.12)`;
+  const accentSoft = `hsla(${hue}, ${saturation}%, ${lightness}%, 0.1)`;
 
-  // Background/Surface colors
-  // We use very low saturation base hue for consistent but subtly matched neutrals
-  let surface = `hsl(${hue}, 10%, 98%)`;
-  let surfaceDark = `hsl(${hue}, 15%, 10%)`;
-
-  if (presetId === 'cyberpunk') {
-    surface = `hsl(${hue}, 20%, 96%)`;
-    surfaceDark = `hsl(${hue}, 25%, 5%)`; // Deeper dark for cyberpunk
-  }
+  // Background/Surface colors - derive from the hue for cohesion
+  const surface = `hsl(${hue}, ${Math.min(10, saturation)}%, 98%)`;
+  const surfaceDark = `hsl(${hue}, ${Math.min(20, saturation)}%, 8%)`;
+  
+  // New: Specific background for container/card depth
+  const bgSubtle = `hsl(${hue}, ${Math.min(5, saturation)}%, 96%)`;
+  const bgSubtleDark = `hsl(${hue}, ${Math.min(10, saturation)}%, 12%)`;
 
   return {
     seed: seedString,
@@ -125,7 +126,6 @@ export function generateTheme(seedString, presetId = 'professional') {
       secondary,
       surface,
       surfaceDark,
-      // For CSS consumption
       colors: {
         '--primary': primary,
         '--primary-light': primaryLight,
@@ -133,11 +133,13 @@ export function generateTheme(seedString, presetId = 'professional') {
         '--secondary': secondary,
         '--surface': surface,
         '--surface-dark': surfaceDark,
-        '--accent': primary, // Legacy support
+        '--bg-subtle': bgSubtle,
+        '--bg-subtle-dark': bgSubtleDark,
         '--accent-soft': accentSoft,
-        '--theme-gradient': `linear-gradient(135deg, ${primary}, ${secondary})`,
+        '--theme-gradient': `linear-gradient(135deg, ${primary} 0%, ${secondary} 100%)`,
+        '--glass-bg': `hsla(${hue}, ${Math.min(10, saturation)}%, 98%, 0.8)`,
+        '--glass-bg-dark': `hsla(${hue}, ${Math.min(20, saturation)}%, 10%, 0.8)`,
       },
-      // Gradient helper
       gradient: `linear-gradient(135deg, ${primary}, ${secondary})`,
     },
     // Metadata for UI

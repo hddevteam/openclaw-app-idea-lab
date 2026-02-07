@@ -40,15 +40,16 @@ export function ensureEntryThemeStyle(entry: ManifestEntry) {
 
   const decls = Object.entries(colors)
     .filter(([k, v]) => k.startsWith('--') && typeof v === 'string' && v.trim())
-    .map(([k, v]) => `  ${k}: ${v};`)
+    .map(([k, v]) => {
+      // Ensure all injected variables are isolated with --prj- prefix
+      const pk = k.startsWith('--prj-') ? k : k.replace(/^--/, '--prj-');
+      return `  ${pk}: ${v};`;
+    })
     .join('\n');
 
   const css = [
     `[data-theme="${themeId}"] {`,
-    decls.replace(/--primary/g, '--prj-primary')
-         .replace(/--secondary/g, '--prj-secondary')
-         .replace(/--accent/g, '--prj-accent')
-         .replace(/--surface/g, '--prj-surface'),
+    decls,
     `  --prj-gradient: ${gradient};`,
     `}`
   ].join('\n');
@@ -78,16 +79,17 @@ function generateFallbackTheme(seedString: string) {
   const seed = Math.abs(hash);
 
   const hue = seed % 360;
-  const saturation = 70 + (seed % 20);
-  const lightness = 45 + (seed % 15);
+  const saturation = 45 + (seed % 15); // Muted organic range
+  const lightness = 45 + (seed % 10);
 
   const primary = `hsl(${hue}, ${saturation}%, ${lightness}%)`;
-  const primaryLight = `hsl(${hue}, ${saturation}%, ${lightness + 15}%)`;
-  const primaryDark = `hsl(${hue}, ${saturation}%, ${lightness - 15}%)`;
-  const secondaryHue = (hue + 150 + (seed % 60)) % 360;
-  const secondary = `hsl(${secondaryHue}, ${saturation - 10}%, ${lightness}%)`;
-  const surface = `hsl(${hue}, 10%, 98%)`;
-  const surfaceDark = `hsl(${hue}, 15%, 10%)`;
+  const primaryLight = `hsl(${hue}, ${saturation}%, ${lightness + 10}%)`;
+  const primaryDark = `hsl(${hue}, ${saturation}%, ${lightness - 10}%)`;
+  const secondaryHue = (hue + 20 + (seed % 10)) % 360; // Tight harmony
+  const secondary = `hsl(${secondaryHue}, ${Math.max(10, saturation - 10)}%, ${lightness}%)`;
+  
+  const surface = `hsl(${hue}, 8%, 98%)`;
+  const surfaceDark = `hsl(${hue}, 12%, 8%)`;
 
   return {
     palette: {
@@ -98,8 +100,8 @@ function generateFallbackTheme(seedString: string) {
         '--secondary': secondary,
         '--surface': surface,
         '--surface-dark': surfaceDark,
-        '--accent': primary,
         '--accent-soft': `hsla(${hue}, ${saturation}%, ${lightness}%, 0.1)`,
+        '--bg-subtle': `hsl(${hue}, 4%, 96%)`,
       },
       gradient: `linear-gradient(135deg, ${primary}, ${secondary})`,
     }
