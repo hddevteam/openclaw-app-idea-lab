@@ -328,6 +328,33 @@ async function main() {
   const trendsReport = await phaseSummarize(researchContext, config);
   await fs.writeFile(TRENDS_REPORT, trendsReport);
   console.log(`[Agent] Trends report updated: ${TRENDS_REPORT}`);
+
+  // Write a per-run research log (for auditability / history)
+  try {
+    const researchLogsDir = path.join(DATA, 'research_logs');
+    await fs.mkdir(researchLogsDir, { recursive: true });
+    const ts = new Date().toISOString().replace(/[:.]/g, '-');
+    const logPath = path.join(researchLogsDir, `research_${ts}.md`);
+    const logMd = [
+      `# Research run ${new Date().toISOString()}`,
+      ``,
+      `## Selected queries`,
+      '```json',
+      JSON.stringify(queries, null, 2),
+      '```',
+      ``,
+      `## Sources`,
+      ...(sources || []).map(s => `- [${s.title}](${s.url})`),
+      ``,
+      `## Trends report`,
+      trendsReport,
+      ``,
+    ].join('\n');
+    await fs.writeFile(logPath, logMd);
+    console.log(`[Agent] Research log written: ${logPath}`);
+  } catch (e) {
+    console.warn(`[Agent] Failed to write research log: ${e.message}`);
+  }
   
   // Save sources for generator
   await fs.writeFile(SOURCES_DATA, JSON.stringify({ updated: new Date().toISOString(), sources }, null, 2));
