@@ -196,6 +196,8 @@ export const NavBar: React.FC<NavBarProps> = ({
                   "p-1.5 rounded-lg transition-colors shrink-0",
                   isExpanded ? "bg-gray-100 dark:bg-gray-800 text-blue-600" : "hover:bg-[#f5f5f7] dark:hover:bg-[#2d2d2f] text-gray-400"
                 )}
+                title={isExpanded ? 'Close settings' : 'Open settings'}
+                aria-label={isExpanded ? 'Close settings' : 'Open settings'}
               >
                 <Settings2 size={16} />
               </button>
@@ -235,6 +237,8 @@ export const NavBar: React.FC<NavBarProps> = ({
                   value={prefs.form}
                   onChange={e => setPrefs(p => ({ ...p, form: e.target.value }))}
                   className="block min-w-[140px] px-4 py-2 rounded-lg border border-[#e5e5e7] dark:border-[#2d2d2f] bg-white dark:bg-[#1c1c1e] text-xs font-bold focus:ring-2 focus:ring-blue-500 transition-all outline-none shadow-sm"
+                  aria-label="Product Form"
+                  title="Product Form"
                 >
                   <option value="ui-template">UI Template (Interaction)</option>
                   <option value="tool">Micro Tool</option>
@@ -280,6 +284,8 @@ export const NavBar: React.FC<NavBarProps> = ({
                       "w-10 h-5 rounded-full transition-colors relative",
                       prefs.refreshResearch ? "bg-blue-600" : "bg-gray-200 dark:bg-gray-700"
                     )}
+                    aria-label={prefs.refreshResearch ? 'Disable deep research' : 'Enable deep research'}
+                    title={prefs.refreshResearch ? 'Disable deep research' : 'Enable deep research'}
                   >
                     <div className={clsx(
                       "absolute top-1 w-3 h-3 rounded-full bg-white transition-all shadow-sm",
@@ -302,12 +308,19 @@ export const NavBar: React.FC<NavBarProps> = ({
                     value={prefs.strictness}
                     onChange={e => setPrefs(p => ({ ...p, strictness: parseFloat(e.target.value) }))}
                     className="w-32 h-1.5 bg-gray-200 dark:bg-gray-700 rounded-lg appearance-none cursor-pointer accent-blue-600"
+                    aria-label="Similarity strictness"
+                    title="Similarity strictness"
                   />
                   <span className="text-xs font-mono font-bold text-blue-600 w-8">{prefs.strictness.toFixed(2)}</span>
                 </div>
               </div>
 
-              <button onClick={() => setIsExpanded(false)} className="self-end p-2 bg-gray-100 dark:bg-gray-800 rounded-full hover:bg-gray-200 dark:hover:bg-gray-700 transition-colors">
+              <button
+                onClick={() => setIsExpanded(false)}
+                className="self-end p-2 bg-gray-100 dark:bg-gray-800 rounded-full hover:bg-gray-200 dark:hover:bg-gray-700 transition-colors"
+                title="Close"
+                aria-label="Close"
+              >
                 <X size={16} className="text-gray-500" />
               </button>
             </div>

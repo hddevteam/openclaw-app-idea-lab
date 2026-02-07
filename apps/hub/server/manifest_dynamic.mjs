@@ -21,10 +21,20 @@ export async function listOutputsAsManifest({ labOutputs }){
     const indexPath = `/${name}/index.html`;
 
     const readme = path.join(base, 'README.md');
+    const themePath = path.join(base, 'theme.json');
     let title = name;
     let desc = '';
     let scenario = '';
     let workflow = '';
+    let theme = null;
+
+    try{
+      const themeRaw = await fs.readFile(themePath, 'utf8');
+      theme = JSON.parse(themeRaw);
+    }catch(_e){
+      // No theme.json, will be handled by UI or default
+    }
+
     try{
       const raw = await fs.readFile(readme, 'utf8');
       const lines = raw.split(/\r?\n/);
@@ -43,7 +53,7 @@ export async function listOutputsAsManifest({ labOutputs }){
     }catch(e){
       console.error(`Failed to parse README for ${name}:`, e.message);
     }
-    entries.push({ date: name, id: name, title, desc, scenario, workflow, indexPath });
+    entries.push({ date: name, id: name, title, desc, scenario, workflow, indexPath, theme });
   }
 
   return { updatedAt: new Date().toISOString(), entries };

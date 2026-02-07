@@ -6,8 +6,19 @@
   --mut: #666666;
   --hair: #e5e5e7;
   --card: #ffffff;
-  --accent: #0071e3;
+  
+  /* Themed variables */
+  --primary: #0071e3;
+  --primary-light: #54a9f5;
+  --primary-dark: #004fad;
+  --secondary: #5856d6;
+  --surface: #fbfbfd;
+  --surface-dark: #1c1c1e;
+
+  --accent: var(--primary);
   --accent-soft: rgba(0, 113, 227, 0.1);
+  --theme-gradient: linear-gradient(135deg, var(--primary), var(--secondary));
+
   --success: #34c759;
   --warning: #ff9500;
   --error: #ff3b30;
@@ -53,8 +64,8 @@ button:active {
 
 .glass {
   background: rgba(255, 255, 255, 0.72);
-  backdrop-filter: blur(20px);
   -webkit-backdrop-filter: blur(20px);
+  backdrop-filter: blur(20px);
   border: 1px solid var(--hair);
 }
 
@@ -73,4 +84,34 @@ button:active {
 @keyframes skeleton-loading {
   0% { background-position: 200% 0; }
   100% { background-position: -200% 0; }
+}
+
+/* Themed progress bar (BuildProgress) */
+.oc-progress {
+  width: 100%;
+  height: 4px;
+  border-radius: 9999px;
+  overflow: hidden;
+  appearance: none;
+}
+
+.oc-progress::-webkit-progress-bar {
+  background: rgba(0, 0, 0, 0.08);
+}
+
+.oc-progress::-webkit-progress-value {
+  background: var(--primary);
+  border-radius: 9999px;
+  transition: width 0.5s ease-out;
+}
+
+.oc-progress::-moz-progress-bar {
+  background: var(--primary);
+  border-radius: 9999px;
+}
+
+@media (prefers-color-scheme: dark) {
+  .oc-progress::-webkit-progress-bar {
+    background: rgba(255, 255, 255, 0.12);
+  }
 }

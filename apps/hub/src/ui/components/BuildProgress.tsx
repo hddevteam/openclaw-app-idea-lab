@@ -12,7 +12,7 @@ export function BuildProgress() {
       try {
         const s = await fetchBuildStatus();
         setStatus(s);
-      } catch (e) {
+      } catch (_e) {
         // ignore
       }
     }, 2000);
@@ -24,7 +24,7 @@ export function BuildProgress() {
       // If it's an error, just send abort to reset the status to idle
       try {
         await abortIdeaGeneration();
-      } catch (e) {
+      } catch (_e) {
         // ignore
       }
       return;
@@ -51,7 +51,7 @@ export function BuildProgress() {
       )}>
         <div className="relative flex-shrink-0">
            {status.status === 'running' ? (
-             <Loader2 className="w-6 h-6 sm:w-8 sm:h-8 text-blue-500 animate-spin" />
+             <Loader2 className="w-6 h-6 sm:w-8 sm:h-8 text-[var(--primary)] animate-spin" />
            ) : (
              <AlertCircle className="w-6 h-6 sm:w-8 sm:h-8 text-red-500" />
            )}
@@ -73,12 +73,12 @@ export function BuildProgress() {
             {status.status === 'error' ? (status.error || 'Check server logs') : (status.title || 'Building creative project...')}
           </div>
           {status.status === 'running' && (
-            <div className="w-full bg-gray-100 dark:bg-gray-800 h-1 rounded-full overflow-hidden">
-               <div 
-                 className="h-full bg-blue-500 transition-all duration-500 ease-out"
-                 style={{ width: `${status.progress || 0}%` }}
-               />
-            </div>
+            <progress
+              className="oc-progress w-full"
+              value={status.progress || 0}
+              max={100}
+              aria-label="Build progress"
+            />
           )}
         </div>
 

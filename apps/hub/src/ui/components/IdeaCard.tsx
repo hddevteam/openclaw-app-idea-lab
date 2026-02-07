@@ -4,7 +4,7 @@ import { Idea } from '../types/idea';
 import { clsx } from 'clsx';
 import { twMerge } from 'tailwind-merge';
 
-function cn(...inputs: any[]) {
+function cn(...inputs: (string | undefined | null | boolean | Record<string, boolean>)[] ) {
   return twMerge(clsx(inputs));
 }
 
@@ -78,6 +78,8 @@ export const IdeaCard: React.FC<IdeaCardProps> = ({
             <button 
               onClick={(e) => { e.stopPropagation(); onDelete(idea.id); }}
               className="p-1 px-1.5 sm:p-1.5 rounded-lg hover:bg-red-50 dark:hover:bg-red-900/30 text-gray-400 hover:text-red-500 transition-colors"
+              title="Delete"
+              aria-label="Delete"
             >
               <Trash2 size={13} className="sm:size-3.5" />
             </button>

@@ -6,6 +6,7 @@ import { fileURLToPath } from 'node:url';
 import 'dotenv/config';
 import { appendManifest } from './core/modules/manifest_update.mjs';
 import { markImplemented, unpickIdea } from './core/modules/idea_mark_implemented.mjs';
+import { generateTheme, guessPreset } from './core/theme.mjs';
 
 const HERE = path.dirname(fileURLToPath(import.meta.url));
 const ROOT = path.resolve(process.env.DAILY_APP_LAB_ROOT || HERE);
@@ -115,19 +116,25 @@ async function main() {
   const outDir = path.join(OUTPUTS, outId);
   await fs.mkdir(outDir, { recursive: true });
 
-  const logFile = path.join(LOGS, `${outId}-generate.log`);
-
   const queuePath = path.join(DATA, 'idea_queue.json');
   const q = await readJson(queuePath, {});
   const idea = q?.idea || null;
 
-  if (idea) {
-    await fs.appendFile(logFile, `Auto-loaded idea from queue: ${idea.title || idea.id}\n`).catch(()=>{});
-  }
-
   const title = idea?.title || idea?.name || 'Extra interactive app project';
   const scenario = idea?.scenario || idea?.hudScenario || idea?.desc || idea?.description || '';
   const ideaId = idea?.id;
+
+  // Generate and save theme based on semantics
+  const presetId = guessPreset(title, scenario);
+  const theme = generateTheme(outId, presetId);
+  await fs.writeFile(path.join(outDir, 'theme.json'), JSON.stringify(theme, null, 2));
+
+  const logFile = path.join(LOGS, `${outId}-generate.log`);
+  await fs.appendFile(logFile, `Selected Theme Preset: ${presetId} (${theme.metadata.presetName})\n`).catch(()=>{});
+
+  if (idea) {
+    await fs.appendFile(logFile, `Auto-loaded idea from queue: ${title}\n`).catch(()=>{});
+  }
 
   // Stability logic: Fixed tech stack to reduce build failures and ensure reliable output
   const chosenStyling = 'Tailwind CSS (standard v3 via PostCSS)';
@@ -144,7 +151,9 @@ async function main() {
     `\nMandatory Technical Standards:`,
     `- Read and strictly follow ALL standards in DAILY_SPEC.md.`,
     `- Tech stack: ${chosenUI} + ${chosenStyling}.`,
-    `- CRITICAL STYLE: You MUST provide 'tailwind.config.js' and 'postcss.config.js'. Use professional, elegant styling (Glassmorphism, gradients, consistent spacing).`,
+    `- CRITICAL THEME: Use the palette defined in 'theme.json'. Map these to CSS variables in your index.css:`,
+    ...Object.entries(theme.palette.colors).map(([k, v]) => `  ${k}: ${v};`),
+    `- CRITICAL STYLE: You MUST provide 'tailwind.config.js' and 'postcss.config.js'. Use professional, elegant styling (Glassmorphism, gradients, consistent spacing). All primary UI elements (buttons, highlights, focus rings) must use the generated theme variables.`,
     `- CRITICAL INTERACTION: Follow "Drag & Drop Safety" in DAILY_SPEC.md. Use 'framer-motion' for physics and animations.`,
     `- Language: Use ${LANG} for ALL UI and content.`,
     `- No external APIs. Use a "SimulationEngine" for all data.`,

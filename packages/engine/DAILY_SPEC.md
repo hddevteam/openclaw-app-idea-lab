@@ -21,7 +21,7 @@ Every day generate a **different**, **interactive**, **elegant** app project (Vi
   - A "Copy Result" or "Export" button must be visible on the first screen.
   - The app must produce something the user can take away (text, image, JSON).
 
-### 1. Localization & Language Consistency
+### 3. Localization & Language Consistency
 - **Full-Stack Localization**: All generated content must strictly use the language specified in the prompt. Ensure consistency across:
   - All UI elements (labels, menus, headers, tooltips, and messages).
   - All mock data, simulation content, and console logs.
@@ -29,7 +29,18 @@ Every day generate a **different**, **interactive**, **elegant** app project (Vi
 - **Character Support**: Ensure the chosen font stack and encoding support the target language characters (e.g., CJK) gracefully on all platforms.
 - **README.md**: The user-facing documentation (Overview, Features, Use Case) must be in the specified language, while technical comments in the code may remain in English.
 
-### 2. Robustness & Self-Healing
+### 4. Color Palette & Thematic Consistency
+- **Dynamic Theme Enforcement**: Each project is assigned a unique, reproducible color palette (stored in `theme.json`).
+- **CSS Variables Usage**:
+  - You MUST define CSS variables in your global CSS (e.g., `src/index.css` or `src/App.css`) using the values from `theme.json`.
+  - Use `--primary`, `--secondary`, `--surface`, `--accent` etc. for all key UI elements:
+    - Main action buttons (background, hover, ring).
+    - Page/Section background gradients.
+    - Component borders and interactive highlights.
+  - Avoid using Tailwind's default color shades (like `bg-blue-600`) for primary brand elements. Instead, use JIT syntax or CSS variable mapping (e.g., `bg-[var(--primary)]`).
+- **Visual Variety**: Ensure that if multiple apps are viewed in a row, they each feel distinct due to their assigned theme while maintaining professional "Glassmorphism" or "Apple-style" quality.
+
+### 5. Robustness & Self-Healing
 - **Error Boundaries**: Must include a runtime error boundary (React/Vue) or global `window.onerror` / `unhandledrejection` handler with user-friendly fallback UI.
 - **Retry Logic**: Use exponential backoff for any network requests (max 3 retries, 1s → 2s → 4s delays).
 - **Memory Protection**: 
