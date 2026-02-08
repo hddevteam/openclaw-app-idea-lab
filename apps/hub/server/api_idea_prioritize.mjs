@@ -1,20 +1,13 @@
 import path from 'node:path';
-import fs from 'node:fs/promises';
 import { spawn } from 'node:child_process';
+import { writeJsonAtomic, readJsonSafe, withFileLock } from '../../../packages/shared/atomic_fs.mjs';
+import { normalizeIdeaList } from '../../../packages/shared/json_contract.mjs';
 
 // Global state to track the running generation process
 let activeGenerationProcess = null;
 
 export function getActiveGenerationProcess() {
   return activeGenerationProcess;
-}
-
-async function readJson(p, fallback){
-  try{
-    return JSON.parse(await fs.readFile(p,'utf8'));
-  }catch{
-    return fallback;
-  }
 }
 
 export async function handleIdeaPrioritizeAndExecute(req, res, { labRuntime, labRoot }){
@@ -25,22 +18,25 @@ export async function handleIdeaPrioritizeAndExecute(req, res, { labRuntime, lab
   const ideaId = input.id;
   if(!ideaId) throw new Error('ideaId required');
 
-  // 1. Mark as implement-now in backlog.json
+  // 1. Mark as implement-now in backlog.json (atomic + locked)
   const backlogPath = path.join(labRuntime, 'data', 'idea_backlog.json');
-  const backlog = await readJson(backlogPath, { ideas: [] });
   let found = false;
-  const nextIdeas = backlog.ideas.map(idea => {
-    if (String(idea.id) === String(ideaId)) {
-      found = true;
-      return { ...idea, status: 'implement-now', prioritizedAt: new Date().toISOString() };
-    }
-    // Optional: reset other implement-now items to avoid confusion
-    if (idea.status === 'implement-now') return { ...idea, status: 'new' };
-    return idea;
-  });
 
-  if (!found) throw new Error(`Idea ${ideaId} not found in backlog`);
-  await fs.writeFile(backlogPath, JSON.stringify({ ...backlog, ideas: nextIdeas, updatedAt: new Date().toISOString() }, null, 2));
+  await withFileLock(backlogPath, async () => {
+    const backlog = normalizeIdeaList(await readJsonSafe(backlogPath, { ideas: [] }));
+    const nextIdeas = backlog.ideas.map(idea => {
+      if (String(idea.id) === String(ideaId)) {
+        found = true;
+        return { ...idea, status: 'implement-now', prioritizedAt: new Date().toISOString() };
+      }
+      // Optional: reset other implement-now items to avoid confusion
+      if (idea.status === 'implement-now') return { ...idea, status: 'new' };
+      return idea;
+    });
+
+    if (!found) throw new Error(`Idea ${ideaId} not found in backlog`);
+    await writeJsonAtomic(backlogPath, { ...backlog, ideas: nextIdeas, updatedAt: new Date().toISOString() });
+  });
 
   // 2. Spawn run_idle_job.sh --force in background
   const scriptPath = path.join(labRoot, 'core', 'scripts', 'run_idle_job.sh');
@@ -48,7 +44,7 @@ export async function handleIdeaPrioritizeAndExecute(req, res, { labRuntime, lab
   
   // Abort previous if exists
   if (activeGenerationProcess) {
-    try { process.kill(-activeGenerationProcess.pid, 'SIGTERM'); } catch (e) {}
+    try { process.kill(-activeGenerationProcess.pid, 'SIGTERM'); } catch (_e) { /* ignore */ }
   }
 
   // Detach and ignore output to not block HTTP response

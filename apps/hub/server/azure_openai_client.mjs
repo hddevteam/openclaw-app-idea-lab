@@ -1,10 +1,19 @@
 import { request } from 'undici';
 
+const API_VERSION = process.env.AZURE_OPENAI_API_VERSION || '2025-04-01-preview';
+
 export async function callAzureOpenAI({ baseUrl, apiKey, model, input, timeoutMs = 60000 }){
   if(!baseUrl || !apiKey) throw new Error('azure config missing');
-  // Azure OpenAI compatible endpoint (per clawdbot/openclaw config): baseUrl already includes /openai/v1/
+
+  // Build proper Azure OpenAI Responses API URL
   const url = new URL(baseUrl);
-  url.pathname = url.pathname.replace(/\/+$/,'') + '/responses';
+  // If baseUrl already contains /openai/ (e.g. from clawdbot config), keep it; otherwise add it
+  if (!url.pathname.includes('/openai/')) {
+    url.pathname = url.pathname.replace(/\/+$/, '') + '/openai/responses';
+  } else {
+    url.pathname = url.pathname.replace(/\/+$/, '') + '/responses';
+  }
+  url.searchParams.set('api-version', API_VERSION);
 
   const bodyObj = {
     model,
@@ -15,7 +24,7 @@ export async function callAzureOpenAI({ baseUrl, apiKey, model, input, timeoutMs
     method: 'POST',
     headers: {
       'Content-Type': 'application/json',
-      'Authorization': `Bearer ${apiKey}`,
+      'api-key': apiKey,
     },
     body: JSON.stringify(bodyObj),
     signal: AbortSignal.timeout(timeoutMs),

@@ -7,6 +7,9 @@ import 'dotenv/config';
 import { appendManifest } from './core/modules/manifest_update.mjs';
 import { markImplemented, unpickIdea } from './core/modules/idea_mark_implemented.mjs';
 import { generateTheme, guessPreset } from './core/theme.mjs';
+import { writeJsonAtomic, readJsonSafe } from '../shared/atomic_fs.mjs';
+import { normalizeIdeaQueue, normalizeBuildStatus } from '../shared/json_contract.mjs';
+import { createEventLogger, generateRunId } from '../shared/event_logger.mjs';
 
 const HERE = path.dirname(fileURLToPath(import.meta.url));
 const ROOT = path.resolve(process.env.DAILY_APP_LAB_ROOT || HERE);
@@ -80,10 +83,6 @@ function run(cmd, args, { cwd, logFile, env = {} } = {}) {
   });
 }
 
-async function readJson(p, fallback) {
-  try { return JSON.parse(await fs.readFile(p, 'utf8')); } catch { return fallback; }
-}
-
 async function ensureViteProject(dir, logFile) {
   const pkg = path.join(dir, 'package.json');
   if (!(await exists(pkg))) {
@@ -94,14 +93,20 @@ async function ensureViteProject(dir, logFile) {
   await run('npm', ['install'], { cwd: dir, logFile });
 }
 
+// --- RunId & Event Logger ---
+const RUN_ID = generateRunId();
+const eventLog = createEventLogger({ logDir: LOGS });
+
 async function writeBuildStatus(status, details = {}) {
   try {
     const p = path.join(DATA, 'build_status.json');
-    await fs.writeFile(p, JSON.stringify({
+    const normalized = normalizeBuildStatus({
       status,
       ...details,
+      runId: RUN_ID,
       updatedAt: new Date().toISOString()
-    }, null, 2));
+    });
+    await writeJsonAtomic(p, normalized);
   } catch (_e) {
     // Silently ignore status update errors
   }
@@ -117,8 +122,11 @@ async function main() {
   await fs.mkdir(outDir, { recursive: true });
 
   const queuePath = path.join(DATA, 'idea_queue.json');
-  const q = await readJson(queuePath, {});
+  const qRaw = await readJsonSafe(queuePath, {});
+  const q = normalizeIdeaQueue(qRaw);
   const idea = q?.idea || null;
+
+  await eventLog.emit('build.start', { runId: RUN_ID, ideaId: idea?.id, title: idea?.title });
 
   const title = idea?.title || idea?.name || 'Extra interactive app project';
   const scenario = idea?.scenario || idea?.hudScenario || idea?.desc || idea?.description || '';
@@ -228,10 +236,44 @@ async function main() {
   await markImplemented({ ideaId, title, relPath: rel });
 
   await writeBuildStatus('idle', { lastProject: title, lastId: outId });
+  await eventLog.emit('build.success', { runId: RUN_ID, ideaId, outId, title });
   console.log(`Extra project done: ${outDir}`);
 } catch (e) {
   await fs.appendFile(logFile, `\nGENERATION_FAILED: ${e?.message || e}\n`).catch(()=>{});
+
+  // *** Structured failure logging ***
+  const failureRecord = {
+    runId: RUN_ID,
+    ideaId,
+    title,
+    outId,
+    failedStage: e?.stage || 'unknown',
+    errorMessage: e?.message || String(e),
+    logPath: logFile,
+    timestamp: new Date().toISOString(),
+  };
+  await eventLog.emit('build.failed', failureRecord);
+
+  // Write failure details back to backlog for learning
   if (ideaId) {
+    try {
+      const backlogPath = path.join(DATA, 'idea_backlog.json');
+      const backlog = await readJsonSafe(backlogPath, { ideas: [] });
+      const items = backlog.ideas || backlog.items || [];
+      const item = items.find(x => x.id === ideaId);
+      if (item) {
+        item.failures = (item.failures || 0) + 1;
+        item.lastFailureReason = failureRecord.errorMessage.slice(0, 200);
+        item.lastFailureStage = failureRecord.failedStage;
+        item.lastFailureRunId = RUN_ID;
+        item.lastFailureAt = new Date().toISOString();
+        // Block after 3 consecutive failures
+        if (item.failures >= 3) item.status = 'blocked';
+      }
+      await writeJsonAtomic(backlogPath, backlog);
+    } catch (bErr) {
+      console.error('Failed to write failure to backlog:', bErr.message);
+    }
     await unpickIdea(ideaId);
     await fs.appendFile(logFile, `Reset backlog status for idea: ${ideaId}\n`).catch(()=>{});
   }

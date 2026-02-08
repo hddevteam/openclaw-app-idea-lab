@@ -2,9 +2,13 @@ import fs from 'node:fs/promises';
 import path from 'node:path';
 
 import { embed, cosine } from './similarity.mjs';
+import { listOutputsAsManifest } from './manifest_dynamic.mjs';
+import { writeJsonAtomic } from '../../../packages/shared/atomic_fs.mjs';
+import { LAB_OUTPUTS } from './config.mjs';
 
 // Simple local RAG index maintained by labhub.
 // Stores embeddings for project summaries so all clients share one retrieval source.
+// SINGLE TRUTH SOURCE: uses manifest_dynamic (outputs/ scan) instead of runtime/data/manifest.json
 
 function ensureDir(p){
   return fs.mkdir(p, { recursive: true });
@@ -22,10 +26,8 @@ export async function buildProjectIndex({ labRuntime, topN = 500 }){
   const { dataDir, indexPath } = defaultIndexPaths({ labRuntime });
   await ensureDir(dataDir);
 
-  const manifestPath = path.join(dataDir, 'manifest.json');
-  const manifestRaw = await fs.readFile(manifestPath, 'utf8');
-  const manifest = JSON.parse(manifestRaw);
-  const entries = Array.isArray(manifest.entries) ? manifest.entries : [];
+  // *** CHANGED: use dynamic manifest (outputs/ directory scan) as single truth source ***
+  const { entries } = await listOutputsAsManifest({ labOutputs: LAB_OUTPUTS });
 
   const items = [];
   for (const e of entries.slice(0, topN)) {
@@ -48,7 +50,7 @@ export async function buildProjectIndex({ labRuntime, topN = 500 }){
     items
   };
 
-  await fs.writeFile(indexPath, JSON.stringify(out, null, 2));
+  await writeJsonAtomic(indexPath, out);
   return { indexPath, count: items.length };
 }
 

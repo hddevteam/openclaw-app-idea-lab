@@ -1,17 +1,10 @@
 import path from 'node:path';
-import fs from 'node:fs/promises';
-
-async function readJson(p, fallback){
-  try{
-    return JSON.parse(await fs.readFile(p,'utf8'));
-  }catch{
-    return fallback;
-  }
-}
+import { readJsonSafe, writeJsonAtomic, withFileLock } from '../../../packages/shared/atomic_fs.mjs';
+import { normalizeIdeaList, normalizeIdea } from '../../../packages/shared/json_contract.mjs';
 
 export async function handleIdeaBacklog(req, res, { labRuntime }){
   const p = path.join(labRuntime, 'data', 'idea_backlog.json');
-  const j = await readJson(p, { updatedAt: null, ideas: [] });
+  const j = normalizeIdeaList(await readJsonSafe(p, { updatedAt: null, ideas: [] }));
   res.writeHead(200, { 'Content-Type': 'application/json; charset=utf-8' });
   res.end(JSON.stringify(j));
 }
@@ -26,15 +19,17 @@ export async function handleIdeaBacklogAdd(req, res, { labRuntime }){
   if(!idea.id) throw new Error('idea.id required');
 
   const p = path.join(labRuntime, 'data', 'idea_backlog.json');
-  const cur = await readJson(p, { updatedAt: null, ideas: [] });
-  const ideas = Array.isArray(cur.ideas) ? cur.ideas : [];
+  await withFileLock(p, async () => {
+    const cur = normalizeIdeaList(await readJsonSafe(p, { updatedAt: null, ideas: [] }));
+    const ideas = cur.ideas;
 
-  const exists = ideas.some(x => String(x.id) === String(idea.id));
-  const next = exists ? ideas.map(x => String(x.id)===String(idea.id) ? { ...x, ...idea, updatedAt: new Date().toISOString() } : x)
-                      : [{ ...idea, createdAt: new Date().toISOString(), status: 'new' }, ...ideas];
+    const exists = ideas.some(x => String(x.id) === String(idea.id));
+    const next = exists ? ideas.map(x => String(x.id)===String(idea.id) ? { ...x, ...idea, updatedAt: new Date().toISOString() } : x)
+                        : [normalizeIdea({ ...idea, createdAt: new Date().toISOString(), status: 'new' }), ...ideas];
 
-  const out = { updatedAt: new Date().toISOString(), ideas: next };
-  await fs.writeFile(p, JSON.stringify(out, null, 2));
+    const out = { updatedAt: new Date().toISOString(), ideas: next };
+    await writeJsonAtomic(p, out);
+  });
 
   res.writeHead(200, { 'Content-Type': 'application/json; charset=utf-8' });
   res.end(JSON.stringify({ ok:true }));

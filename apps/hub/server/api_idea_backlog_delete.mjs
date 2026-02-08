@@ -1,9 +1,6 @@
 import path from 'node:path';
-import fs from 'node:fs/promises';
-
-async function readJson(p, fallback){
-  try{ return JSON.parse(await fs.readFile(p,'utf8')); }catch{ return fallback; }
-}
+import { readJsonSafe, writeJsonAtomic, withFileLock } from '../../../packages/shared/atomic_fs.mjs';
+import { normalizeIdeaList } from '../../../packages/shared/json_contract.mjs';
 
 export async function handleIdeaBacklogDelete(req, res, { labRuntime }){
   const url = new URL(req.url, 'http://localhost');
@@ -15,13 +12,17 @@ export async function handleIdeaBacklogDelete(req, res, { labRuntime }){
   const idsToDelete = idsStr ? idsStr.split(',') : [idStr];
 
   const p = path.join(labRuntime, 'data', 'idea_backlog.json');
-  const cur = await readJson(p, { updatedAt: null, ideas: [] });
-  const ideas = Array.isArray(cur.ideas) ? cur.ideas : [];
-  
-  const next = ideas.filter(x => !idsToDelete.includes(String(x.id)));
-  const out = { updatedAt: new Date().toISOString(), ideas: next };
-  await fs.writeFile(p, JSON.stringify(out, null, 2));
+  let deletedCount = 0;
+
+  await withFileLock(p, async () => {
+    const cur = normalizeIdeaList(await readJsonSafe(p, { updatedAt: null, ideas: [] }));
+    const ideas = cur.ideas;
+    const next = ideas.filter(x => !idsToDelete.includes(String(x.id)));
+    deletedCount = ideas.length - next.length;
+    const out = { updatedAt: new Date().toISOString(), ideas: next };
+    await writeJsonAtomic(p, out);
+  });
 
   res.writeHead(200, { 'Content-Type': 'application/json; charset=utf-8' });
-  res.end(JSON.stringify({ ok:true, count: ideas.length - next.length }));
+  res.end(JSON.stringify({ ok:true, count: deletedCount }));
 }
