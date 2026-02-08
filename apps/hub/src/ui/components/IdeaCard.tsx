@@ -1,5 +1,5 @@
 import React from 'react';
-import { Check, Trash2, Clock } from 'lucide-react';
+import { Check, Trash2, Clock, Fingerprint } from 'lucide-react';
 import { Idea } from '../types/idea';
 import { clsx } from 'clsx';
 import { twMerge } from 'tailwind-merge';
@@ -40,6 +40,18 @@ export const IdeaCard: React.FC<IdeaCardProps> = ({
 
   const severity = getSeverity(score);
 
+  const getThemeColor = (theme?: string) => {
+    switch(theme) {
+      case 'professional': return 'text-blue-600 bg-blue-50 border-blue-100 dark:bg-blue-900/20 dark:text-blue-400 dark:border-blue-900/30';
+      case 'tech': return 'text-cyan-600 bg-cyan-50 border-cyan-100 dark:bg-cyan-900/20 dark:text-cyan-400 dark:border-cyan-900/30';
+      case 'nature': return 'text-emerald-600 bg-emerald-50 border-emerald-100 dark:bg-emerald-900/20 dark:text-emerald-400 dark:border-emerald-900/30';
+      case 'vibrant': return 'text-orange-600 bg-orange-50 border-orange-100 dark:bg-orange-900/20 dark:text-orange-400 dark:border-orange-900/30';
+      case 'creative': return 'text-purple-600 bg-purple-50 border-purple-100 dark:bg-purple-900/20 dark:text-purple-400 dark:border-purple-900/30';
+      case 'minimal': return 'text-gray-600 bg-gray-50 border-gray-100 dark:bg-gray-800/40 dark:text-gray-400 dark:border-gray-800/50';
+      default: return 'text-gray-500 bg-gray-50 border-gray-100 dark:bg-gray-800/20 dark:text-gray-400 dark:border-gray-800/30';
+    }
+  };
+
   return (
     <div 
       className={cn(
@@ -64,9 +76,20 @@ export const IdeaCard: React.FC<IdeaCardProps> = ({
       )}
 
       <div className="flex justify-between items-start gap-2">
-        <h3 className="text-sm sm:text-base font-bold leading-tight group-hover:text-blue-600 dark:group-hover:text-blue-400 transition-colors">
-          {idea.title}
-        </h3>
+        <div className="flex flex-col gap-1.5 min-w-0">
+          <h3 className="text-sm sm:text-base font-bold leading-tight group-hover:text-blue-600 dark:group-hover:text-blue-400 transition-colors truncate">
+            {idea.title}
+          </h3>
+          {idea.visualTheme && (
+            <div className={cn(
+              "self-start flex items-center gap-1 px-1.5 py-0.5 rounded-md text-[8px] font-bold uppercase tracking-wider border transition-colors",
+              getThemeColor(idea.visualTheme)
+            )}>
+              <Fingerprint size={10} />
+              {idea.visualTheme}
+            </div>
+          )}
+        </div>
         <div className="flex gap-1.5 shrink-0">
           {idea.status === 'implemented' && (
             <div className="px-1.5 sm:px-2 py-0.5 rounded-lg bg-green-500/10 text-green-500 text-[8px] sm:text-[9px] font-bold uppercase tracking-wider flex items-center gap-1 border border-green-500/20">

@@ -77,6 +77,7 @@ Return ONLY valid JSON with schema (all string fields must be in ${LANG}):
       "id": "kebab-case-unique",
       "title": "...",
       "hudScenario": "1 sentence: who uses it, for what decision/workflow, what output",
+      "visualTheme": "Choose ONE preset: professional (clean, biz), tech (slate, cyber, data), nature (sage, organic), vibrant (bright, energetic), creative (deep purple, magic), minimal (monochrome, zen)",
       "output": "Concrete output users can copy/export",
       "coreInteractions": ["Swipe to...", "Drag to...", "Pinch to..."],
       "mockDataStrategy": "How to fake the data? (e.g. 'Generate 10 random items', 'Pre-load JSON')",

@@ -124,13 +124,13 @@ async function main() {
   const scenario = idea?.scenario || idea?.hudScenario || idea?.desc || idea?.description || '';
   const ideaId = idea?.id;
 
-  // Generate and save theme based on semantics
-  const presetId = guessPreset(title, scenario);
+  // Generate and save theme based on agent preference or semantics
+  const presetId = idea?.visualTheme || guessPreset(title, scenario);
   const theme = generateTheme(outId, presetId);
   await fs.writeFile(path.join(outDir, 'theme.json'), JSON.stringify(theme, null, 2));
 
   const logFile = path.join(LOGS, `${outId}-generate.log`);
-  await fs.appendFile(logFile, `Selected Theme Preset: ${presetId} (${theme.metadata.presetName})\n`).catch(()=>{});
+  await fs.appendFile(logFile, `Selected Theme Preset: ${presetId} (from ${idea?.visualTheme ? 'Agent' : 'Heuristic'})\n`).catch(()=>{});
 
   if (idea) {
     await fs.appendFile(logFile, `Auto-loaded idea from queue: ${title}\n`).catch(()=>{});
