@@ -164,7 +164,23 @@ Return ONLY valid JSON with schema (all string fields must be in ${LANG}):
   const json = llmResult.value;
 
   // *** Normalize each idea through JSON contract ***
-  const rawIdeas = Array.isArray(json.ideas) ? json.ideas : [];
+  // Handle multiple LLM response shapes:
+  // 1. { ideas: [...] }           — expected format
+  // 2. { ideas: [...], ... }      — expected format with extra fields
+  // 3. [...]                      — direct array of ideas
+  // 4. { id, title, ... }         — single idea object
+  let rawIdeas;
+  if (Array.isArray(json)) {
+    rawIdeas = json;
+  } else if (Array.isArray(json?.ideas)) {
+    rawIdeas = json.ideas;
+  } else if (json?.id && json?.title) {
+    rawIdeas = [json]; // single idea returned as object
+  } else {
+    // Try to find any array property that looks like ideas
+    const arrKey = Object.keys(json || {}).find(k => Array.isArray(json[k]) && json[k].length > 0 && json[k][0]?.title);
+    rawIdeas = arrKey ? json[arrKey] : [];
+  }
   const normalizedIdeas = rawIdeas.map(normalizeIdea).filter(Boolean);
 
   // Local similarity hard filter vs history (dynamic manifest)
@@ -299,7 +315,12 @@ Return ONLY valid JSON with schema (all string fields must be in ${LANG}):
     console.warn('[Archive] Failed to archive research:', err.message);
   }
 
-  const outJson = { ...json, ideas: finalAccepted, filtered: rejected.length, runId };
+  const outJson = {
+    generatedAt: json?.generatedAt || new Date().toISOString(),
+    ideas: finalAccepted,
+    filtered: rejected.length,
+    runId,
+  };
 
   res.writeHead(200, { 'Content-Type': 'application/json; charset=utf-8' });
   res.end(JSON.stringify(outJson));
