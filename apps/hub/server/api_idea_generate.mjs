@@ -76,25 +76,33 @@ Goal:
 - CONSTRAINT: Works offline — use local mock data or browser APIs (localStorage, Canvas, Web Audio, WebRTC, etc.).
 
 CRITICAL — ANTI-REPETITION RULES (your output will be REJECTED if violated):
-1. BANNED TITLE WORDS: Do NOT use "模拟器", "模拟", "演练", "离线" in titles. These are already overused (30% of existing ideas).
-2. BANNED PATTERNS: Do NOT generate "XX参数调节器", "XX手感实验室", "XX模拟器（离线）". These patterns are exhausted.
-3. THINK BEYOND SIMULATORS: Consider these alternative idea archetypes:
-   - 🎮 Interactive games/puzzles (not gamified tools)
-   - 🎨 Creative/generative tools (art, music, writing)
-   - 📊 Visualizers that reveal hidden patterns in data
-   - 🧩 Combinatorial/mashup tools (combine two unrelated concepts)
-   - 🔧 Developer micro-utilities (code visualization, regex playground, etc.)
-   - 📱 Social/collaborative micro-experiences (no backend = use WebRTC/local)
-   - 🧠 Learning/quiz/flashcard experiences
-   - 🎲 Procedural generators (names, stories, maps, palettes, recipes)
-   - ⏱️ Time-based challenges (speed runs, timed creation)
-   - 🗺️ Spatial/map-based explorations (using static map tiles)
-4. Each idea must feel like a COMPLETE tiny product, not a "settings panel" or "parameter tuner".
-5. The "hudScenario" must describe a REAL human desire (fun, curiosity, creativity, social), not just "调参" or "决策".
+1. BANNED TITLE WORDS: Do NOT use "模拟器", "模拟", "演练", "离线" in titles.
+2. BANNED PATTERNS: No "XX参数调节器", "XX手感实验室", "XX模拟器（离线）".
+3. THINK BEYOND TECH WORKERS! At least HALF of ideas must target NON-tech personas:
+   - 🍳 餐饮从业者: recipe costing, prep timer, menu card maker, ingredient substitution
+   - 🏗️ 工地/维修人员: measurement converter, material estimator, safety checklist, job photo log
+   - 🌾 农业/种植: planting calendar, harvest tracker, weather-condition matcher
+   - 💇 美容/手艺人: appointment card generator, portfolio showcase, color mixer
+   - 🚚 物流/快递: route sorter, package counter, delivery receipt maker
+   - 🏪 小商户/摊贩: daily revenue tally, inventory countdown, price tag maker, loyalty stamp card
+   - 👶 家长/护理者: medication schedule, growth milestone tracker, meal rotation planner
+   - 🎓 学生/考生: flashcard battle, formula quick-ref, study timer with Pomodoro
+   - 🏋️ 健身/运动教练: rep counter, circuit builder, client progress card
+   - 🎵 音乐人/表演者: setlist builder, BPM tapper, chord progression dice
+   - 📸 内容创作者: thumbnail composer, caption generator, posting schedule wheel
+4. Also consider these archetypes for ALL personas:
+   - 🧮 Quick calculators/estimators for specific trades
+   - 📋 Checklist/SOP builders that export shareable cards
+   - 📊 Simple dashboards that visualize one day's work
+   - 🎲 Randomizers/generators (menu of the day, workout shuffle, name picker)
+   - ⏱️ Timers with industry-specific presets
+   - 📷 Camera-based tools (scan → organize → export)
+5. Each idea must feel like a COMPLETE tiny product for a REAL person.
+6. The "hudScenario" must name a SPECIFIC persona (e.g. "街边奶茶店老板", "装修工人", "考研学生"), not generic "用户".
 
 - DIVERSITY REQUIREMENT:
-  - Cover at least 5 DIFFERENT domains from: ai, system, network, game, productivity, design, photo, video, music, finance, business, dev-tools, edu, health, lifestyle, travel, food, social, storytelling, language.
-  - Use at least 4 DIFFERENT interaction primitives from: drag-drop, swipe, pinch-zoom, long-press, slider, toggle, canvas-draw, timeline, card-stack, sort-filter, scroll-reveal, gesture-ring, shake, voice-input, camera-feed.
+  - Cover at least 5 DIFFERENT domains from: food-bev, construction, agriculture, beauty, logistics, retail, parenting, education, fitness, music, content-creation, finance, health, crafts, pet-care, real-estate, game, productivity, design, dev-tools, social.
+  - Use at least 4 DIFFERENT interaction primitives from: drag-drop, swipe, pinch-zoom, long-press, slider, toggle, canvas-draw, timeline, card-stack, sort-filter, scroll-reveal, gesture-ring, shake, voice-input, camera-feed, tap-counter.
   - NO TWO ideas should share the same primary interaction AND domain.
 - MOBILE USABILITY CRITICAL:
   - DO NOT capture gestures on document/body.
@@ -122,7 +130,8 @@ Return ONLY valid JSON with schema (all string fields must be in ${LANG}):
     {
       "id": "kebab-case-unique",
       "title": "简洁有趣的产品名（禁止用'模拟器/演练/离线'）",
-      "hudScenario": "1 sentence: who uses it, for what HUMAN DESIRE (fun/curiosity/creativity/productivity), what delightful output",
+      "hudScenario": "[具体人物如:奶茶店店员/工地监工/宝妈] 用它来 [做什么] 得到 [什么具体产出]",
+      "targetPersona": "具体行业+角色，如'街边早餐店老板'、'外卖骑手'、'幼儿园老师'",
       "visualTheme": "Choose ONE preset: professional (clean, biz), tech (slate, cyber, data), nature (sage, organic), vibrant (bright, energetic), creative (deep purple, magic), minimal (monochrome, zen)",
       "output": "Concrete output users can copy/export/share",
       "coreInteractions": ["Swipe to...", "Drag to...", "Pinch to..."],

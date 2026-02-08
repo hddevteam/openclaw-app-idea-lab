@@ -66,6 +66,11 @@ export function normalizeIdea(raw) {
   }
   idea.complexityBudget.minutes = Math.min(120, Math.max(10, Number(idea.complexityBudget.minutes) || 60));
 
+  // targetPersona – who this idea serves (e.g. "街边奶茶店老板", "装修工人")
+  if (idea.targetPersona) {
+    idea.targetPersona = String(idea.targetPersona).trim();
+  }
+
   // timestamps
   idea.createdAt = idea.createdAt || new Date().toISOString();
 

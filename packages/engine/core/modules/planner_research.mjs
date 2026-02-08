@@ -171,8 +171,9 @@ async function agentPlanner(config, eventLog, runId) {
   Task: Create A DIVERSITY PLAN and search queries for discovering fresh micro-app ideas.
 
   STEP 1 – Diversity Assessment:
-  - Identify which domains from [ai, system, network, game, productivity, design, photo, video, music, finance, business, dev-tools, edu, health, lifestyle, travel] are UNDERREPRESENTED in the current backlog.
-  - Identify which interaction primitives from [drag-drop, swipe, pinch-zoom, long-press, slider, toggle, canvas-draw, timeline, card-stack, sort-filter, scroll-reveal, gesture-ring] are MISSING.
+  - Identify which domains from [food-bev, construction, agriculture, beauty, logistics, retail, parenting, education, fitness, music, content-creation, finance, health, crafts, pet-care, real-estate, game, productivity, design, dev-tools, social] are UNDERREPRESENTED in the current backlog.
+  - Identify which interaction primitives from [drag-drop, swipe, pinch-zoom, long-press, slider, toggle, canvas-draw, timeline, card-stack, sort-filter, scroll-reveal, gesture-ring, shake, voice-input, camera-feed, tap-counter] are MISSING.
+  - CRITICAL: Prioritize domains that serve NON-tech workers (餐饮/工地/美容/物流/农业/小商户/家长/学生/健身教练).
 
   STEP 2 – Generate 8 search queries:
   - 4 queries in English (global: Product Hunt, Indie Hackers, HN)
@@ -226,7 +227,7 @@ async function agentPlanner(config, eventLog, runId) {
   // Dynamic fallback: use Brave Search to discover real-time trends for gap domains
   if (queries.length === 0) {
     console.warn('[Agent:Planner] LLM planner failed, building search-driven fallback queries');
-    const ALL_DOMAINS = ['ai', 'system', 'network', 'game', 'productivity', 'design', 'photo', 'video', 'music', 'finance', 'health', 'edu', 'lifestyle', 'travel'];
+    const ALL_DOMAINS = ['food-bev', 'construction', 'agriculture', 'beauty', 'logistics', 'retail', 'parenting', 'education', 'fitness', 'music', 'content-creation', 'finance', 'health', 'crafts', 'pet-care', 'real-estate', 'game', 'productivity', 'design', 'dev-tools'];
     const covered = new Set(existingKeywords.map(k => k.toLowerCase()));
     const gaps = ALL_DOMAINS.filter(d => !covered.has(d));
     const targets = gaps.length >= 4 ? gaps.slice(0, 4) : ALL_DOMAINS.sort(() => Math.random() - 0.5).slice(0, 4);
@@ -352,19 +353,22 @@ async function agentIdeator(researchContext, diversityPlan, config, eventLog, ru
   1. NO Login, NO Backend, NO Paid Keys.
   2. Must be buildable in React+Tailwind in < 60 mins.
   3. Use local mock data or browser APIs (localStorage, Canvas, Web Audio, WebRTC) when real data isn't available.
-  4. BANNED TITLE WORDS: Do NOT use "模拟器", "模拟", "演练", "离线" in titles — these are overused.
-  5. BANNED PATTERNS: No "XX参数调节器", "XX手感实验室", "XX模拟器（离线）".
-  6. Think BEYOND simulators! Consider:
-     - 🎮 Interactive games/puzzles (not gamified tools)  
-     - 🎨 Creative/generative tools (art, music, writing)
-     - 📊 Visualizers that reveal hidden patterns
-     - 🧩 Mashup tools (combine two unrelated concepts)
-     - 🔧 Developer micro-utilities (regex, color, code viz)
-     - 🧠 Learning/quiz/flashcard experiences
-     - 🎲 Procedural generators (names, stories, maps, palettes)
-     - ⏱️ Time-based challenges (speed runs, timed creation)
-  7. Each idea must feel like a COMPLETE tiny product, not a "settings panel".
-  8. The hudScenario must describe a REAL human desire (fun, curiosity, creativity), not just "调参".
+  4. BANNED TITLE WORDS: Do NOT use "模拟器", "模拟", "演练", "离线" in titles.
+  5. BANNED PATTERNS: No "XX参数调节器", "XX手感实验室".
+  6. TARGET REAL INDUSTRY PERSONAS (at least HALF of ideas must be for NON-tech workers):
+     - 🍳 餐饮: recipe costing, prep timer, menu maker
+     - 🏗️ 工地/维修: measurement converter, material estimator, safety checklist
+     - 💇 美容/手艺: appointment card, portfolio showcase, color mixer
+     - 🏪 小商户/摊贩: daily tally, inventory countdown, price tag maker
+     - 👶 家长/护理: medication schedule, growth tracker, meal planner
+     - 🎓 学生/考生: flashcard battle, formula quick-ref, study timer
+     - 🏋️ 健身教练: rep counter, circuit builder, progress card
+     - 🚚 物流/快递: route sorter, delivery receipt maker
+     - 🌾 农业: planting calendar, harvest tracker
+     - 📸 内容创作者: thumbnail composer, caption generator
+  7. Also consider: calculators for specific trades, checklist/SOP builders, one-day dashboards, randomizers, timers with presets, camera→organize→export tools.
+  8. Each idea must feel like a COMPLETE tiny product for a SPECIFIC persona.
+  9. The hudScenario must name a SPECIFIC persona (如 "街边奶茶店老板"), not generic "用户".
 
   Return JSON ONLY:
   [
