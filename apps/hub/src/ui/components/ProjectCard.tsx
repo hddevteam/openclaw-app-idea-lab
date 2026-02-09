@@ -1,10 +1,11 @@
-import React, { useState } from 'react';
-import { ExternalLink, Trash2, Star, Calendar, ArrowRight, RotateCcw, ChevronDown, ChevronUp, BookOpen, Fingerprint } from 'lucide-react';
+import React, { useEffect, useMemo, useState } from 'react';
+import { Trash2, Star, Calendar, ArrowRight, RotateCcw, ChevronDown, ChevronUp, BookOpen, Fingerprint } from 'lucide-react';
 import { clsx } from 'clsx';
 import { ManifestEntry } from '../../types/manifest';
 import { Feedback } from '../../types/feedback';
 import { restoreIdea } from '../../lib/api';
 import ReactMarkdown from 'react-markdown';
+import { ensureEntryThemeStyle, getEntryThemeId } from '../theme';
 
 interface ProjectCardProps {
   entry: ManifestEntry;
@@ -29,7 +30,7 @@ export const ProjectCard: React.FC<ProjectCardProps> = ({ entry, feedback, onRat
       const j = await r.json().catch(() => ({ ok: false }));
       if (!r.ok || j.ok === false) throw new Error('delete failed');
       onDelete(entry.date);
-    } catch (err) {
+    } catch (_err) {
       alert('Delete failed');
     } finally {
       setIsDeleting(false);
@@ -42,26 +43,43 @@ export const ProjectCard: React.FC<ProjectCardProps> = ({ entry, feedback, onRat
     try {
       await restoreIdea(entry.date);
       onDelete(entry.date); // Use onDelete to remove it from the list
-    } catch (err) {
+    } catch (_err) {
       alert('Restore failed');
     } finally {
       setIsDeleting(false);
     }
   };
 
+  const themeId = useMemo(() => getEntryThemeId(entry), [entry]);
+
+  useEffect(() => {
+    ensureEntryThemeStyle(entry);
+  }, [entry]);
+
   return (
-    <div className="group relative rounded-3xl p-5 bg-white dark:bg-[#1c1c1e] hover:shadow-2xl hover:shadow-blue-500/5 transition-all duration-300 border border-[#e5e5e7] dark:border-[#2d2d2f] hover:translate-y-[-2px]">
+    <div
+      data-theme={themeId}
+      className="group relative rounded-3xl p-5 bg-white dark:bg-[#1c1c1e] hover:shadow-2xl transition-all duration-300 border border-[#e5e5e7] dark:border-[#2d2d2f] hover:translate-y-[-2px]"
+    >
       <div className="flex justify-between items-start mb-4">
-        <div className="flex items-center gap-2 px-2 py-1 rounded-lg bg-[#f5f5f7] dark:bg-[#2d2d2f] text-[10px] font-bold text-gray-500 dark:text-gray-400 uppercase tracking-widest">
-          <Calendar size={12} />
-          {entry.date}
+        <div className="flex flex-wrap gap-2">
+          <div className="flex items-center gap-2 px-2 py-1 rounded-lg bg-[#f5f5f7] dark:bg-[#2d2d2f] text-[10px] font-bold text-gray-500 dark:text-gray-400 uppercase tracking-widest">
+            <Calendar size={12} />
+            {entry.date}
+          </div>
+          {entry.theme?.metadata?.presetName && (
+            <div className="flex items-center gap-1.5 px-2 py-1 rounded-lg bg-[var(--prj-accent-soft,rgba(0,113,227,0.1))] text-[10px] font-bold text-[var(--prj-primary,#0071e3)] uppercase tracking-widest border border-[var(--prj-primary)]/10">
+              <Fingerprint size={12} />
+              {entry.theme.metadata.presetName}
+            </div>
+          )}
         </div>
         <div className="flex items-center gap-2 opacity-0 group-hover:opacity-100 transition-opacity">
           <button 
             onClick={handleRestore}
             disabled={isDeleting}
             title="Restore to backlog"
-            className="p-1.5 rounded-lg text-blue-400 hover:bg-blue-50 dark:hover:bg-blue-900/10 transition-colors"
+            className="p-1.5 rounded-lg text-blue-500 hover:bg-blue-50 dark:hover:bg-blue-900/10 transition-colors"
           >
             <RotateCcw size={16} />
           </button>
@@ -122,7 +140,7 @@ export const ProjectCard: React.FC<ProjectCardProps> = ({ entry, feedback, onRat
         {allTags.length > 0 && (
           <div className="flex flex-wrap gap-1 mt-2">
             {allTags.map(t => (
-              <span key={t} className="px-1.5 py-0.5 rounded-md bg-blue-50 dark:bg-blue-900/20 text-blue-600 dark:text-blue-400 text-[9px] font-bold capitalize border border-blue-100/50 dark:border-blue-800/50">
+              <span key={t} className="px-1.5 py-0.5 rounded-md bg-[var(--prj-accent-soft)] text-[var(--prj-primary)] text-[9px] font-bold capitalize border border-[var(--prj-primary)]/10">
                 {t}
               </span>
             ))}
@@ -144,7 +162,7 @@ export const ProjectCard: React.FC<ProjectCardProps> = ({ entry, feedback, onRat
 
         <a 
           href={entry.indexPath || `/${entry.date}/index.html`}
-          className="flex items-center gap-1.5 px-4 py-1.5 rounded-xl bg-blue-600 text-white text-[11px] font-bold shadow-lg shadow-blue-500/10 hover:bg-blue-700 active:scale-95 transition-all"
+          className="flex items-center gap-1.5 px-4 py-1.5 rounded-xl bg-blue-600 text-white text-[11px] font-bold shadow-lg shadow-blue-500/20 hover:bg-blue-700 active:scale-95 transition-all"
         >
           <span>Open</span>
           <ArrowRight size={14} />

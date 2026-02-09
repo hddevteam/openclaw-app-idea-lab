@@ -1,9 +1,6 @@
 import path from 'node:path';
-import fs from 'node:fs/promises';
-
-async function readJson(p, fallback){
-  try{ return JSON.parse(await fs.readFile(p,'utf8')); }catch{ return fallback; }
-}
+import { readJsonSafe, writeJsonAtomic, withFileLock } from '../../../packages/shared/atomic_fs.mjs';
+import { normalizeIdeaList } from '../../../packages/shared/json_contract.mjs';
 
 export async function handleIdeaStatusRestore(req, res, { labRuntime }){
   const url = new URL(req.url, 'http://localhost');
@@ -11,18 +8,17 @@ export async function handleIdeaStatusRestore(req, res, { labRuntime }){
   if(!id) throw new Error('id required');
 
   const p = path.join(labRuntime, 'data', 'idea_backlog.json');
-  const cur = await readJson(p, { updatedAt: null, ideas: [] });
-  const ideas = Array.isArray(cur.ideas) ? cur.ideas : [];
-  
-  const next = ideas.map(x => {
-    if (String(x.id) === String(id)) {
-      return { ...x, status: 'backlog' }; // Remove 'implemented' status
-    }
-    return x;
+  await withFileLock(p, async () => {
+    const cur = normalizeIdeaList(await readJsonSafe(p, { updatedAt: null, ideas: [] }));
+    const next = cur.ideas.map(x => {
+      if (String(x.id) === String(id)) {
+        return { ...x, status: 'backlog' };
+      }
+      return x;
+    });
+    const out = { updatedAt: new Date().toISOString(), ideas: next };
+    await writeJsonAtomic(p, out);
   });
-
-  const out = { updatedAt: new Date().toISOString(), ideas: next };
-  await fs.writeFile(p, JSON.stringify(out, null, 2));
 
   res.writeHead(200, { 'Content-Type': 'application/json; charset=utf-8' });
   res.end(JSON.stringify({ ok:true }));

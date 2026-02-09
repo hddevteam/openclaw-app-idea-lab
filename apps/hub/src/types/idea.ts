@@ -26,6 +26,7 @@ export interface Idea {
   coreInteractions: string[];
   selfHealing: string[];
   keywords: string[];
+  visualTheme?: string;
   complexityBudget?: ComplexityBudget;
   sources: IdeaSource[];
   similarity?: Similarity;

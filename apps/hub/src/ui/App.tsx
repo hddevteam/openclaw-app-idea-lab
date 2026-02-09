@@ -347,9 +347,11 @@ export function App() {
             </h2>
           </div>
         </div>
-        <button 
+        <button
           onClick={() => setSelectedId(null)}
           className="p-1.5 sm:p-2 rounded-xl bg-gray-100 dark:bg-gray-800 text-gray-400 transition-colors shrink-0"
+          title="Close"
+          aria-label="Close"
         >
           <X size={20} className="sm:size-6" />
         </button>
@@ -367,7 +369,7 @@ export function App() {
               <label className="text-[8px] sm:text-[10px] font-bold text-gray-400 uppercase tracking-widest block">Workflow (Core Interactions)</label>
               <ul className="space-y-2.5">
                 {idea.coreInteractions.map((ci, idx) => (
-                  <li key={idx} className="flex gap-3 items-start animate-in slide-in-from-left duration-300" style={{ animationDelay: `${idx * 100}ms` }}>
+                  <li key={idx} className="flex gap-3 items-start animate-in slide-in-from-left duration-300">
                     <div className="flex-shrink-0 w-5 h-5 rounded-full bg-blue-50 dark:bg-blue-900/20 text-blue-600 dark:text-blue-400 flex items-center justify-center text-[10px] font-bold border border-blue-100 dark:border-blue-900/30 shadow-sm">
                       {idx + 1}
                     </div>
@@ -539,7 +541,12 @@ export function App() {
                     <h2 className="text-sm sm:text-lg font-bold truncate">AI-Native Trends & Opportunities</h2>
                     <p className="text-[9px] sm:text-xs text-purple-600 dark:text-purple-400 font-bold uppercase tracking-widest">Research-Driven Insights</p>
                   </div>
-                  <button onClick={() => setShowReport(false)} className="ml-auto p-1.5 sm:p-2 hover:bg-purple-200 dark:hover:bg-purple-800/50 rounded-full transition-colors shrink-0">
+                  <button
+                    onClick={() => setShowReport(false)}
+                    className="ml-auto p-1.5 sm:p-2 hover:bg-purple-200 dark:hover:bg-purple-800/50 rounded-full transition-colors shrink-0"
+                    title="Close"
+                    aria-label="Close"
+                  >
                     <X size={18} className="sm:size-5 text-purple-600" />
                   </button>
                 </div>
@@ -562,7 +569,12 @@ export function App() {
                       <h2 className="text-sm sm:text-lg font-bold truncate text-amber-900 dark:text-amber-100">Research Archives</h2>
                       <p className="text-[9px] sm:text-xs text-amber-600 dark:text-amber-400 font-bold uppercase tracking-widest">History & Context</p>
                     </div>
-                    <button onClick={() => setShowHistory(false)} className="ml-auto p-1.5 sm:p-2 hover:bg-amber-200 dark:hover:bg-amber-800/50 rounded-full transition-colors shrink-0">
+                    <button
+                      onClick={() => setShowHistory(false)}
+                      className="ml-auto p-1.5 sm:p-2 hover:bg-amber-200 dark:hover:bg-amber-800/50 rounded-full transition-colors shrink-0"
+                      title="Close"
+                      aria-label="Close"
+                    >
                       <X size={18} className="sm:size-5 text-amber-600" />
                     </button>
                   </div>
@@ -604,7 +616,12 @@ export function App() {
                         <h2 className="text-sm sm:text-lg font-bold truncate">{selectedLog.name}</h2>
                         <p className="text-[9px] sm:text-xs text-gray-500 font-bold uppercase tracking-widest">Archived Snapshot</p>
                       </div>
-                      <button onClick={() => setSelectedLog(null)} className="ml-auto p-1.5 sm:p-2 hover:bg-gray-100 rounded-full transition-colors shrink-0">
+                      <button
+                        onClick={() => setSelectedLog(null)}
+                        className="ml-auto p-1.5 sm:p-2 hover:bg-gray-100 rounded-full transition-colors shrink-0"
+                        title="Close"
+                        aria-label="Close"
+                      >
                         <X size={18} className="sm:size-5 text-gray-400" />
                       </button>
                     </div>
@@ -633,9 +650,11 @@ export function App() {
                   className="w-full pl-10 pr-10 py-2.5 rounded-2xl border border-[#e5e5e7] dark:border-[#2d2d2f] bg-white dark:bg-[#1c1c1e] text-sm font-bold focus:ring-2 focus:ring-blue-500 transition-all outline-none"
                 />
                 {search && (
-                  <button 
+                  <button
                     onClick={() => setSearch('')}
                     className="absolute right-3 top-1/2 -translate-y-1/2 p-1 hover:bg-gray-100 dark:hover:bg-gray-800 rounded-full"
+                    title="Clear search"
+                    aria-label="Clear search"
                   >
                     <X size={14} className="text-gray-400" />
                   </button>
@@ -705,7 +724,12 @@ export function App() {
                 {selectedTag && (
                   <div className="flex items-center gap-2 px-3 py-1.5 bg-blue-600 text-white rounded-xl text-[9px] sm:text-[10px] font-bold uppercase tracking-wider animate-in zoom-in duration-200 shrink-0">
                     <span>#{selectedTag}</span>
-                    <button onClick={() => setSelectedTag(null)} className="p-0.5 hover:bg-white/20 rounded-full transition-colors">
+                    <button
+                      onClick={() => setSelectedTag(null)}
+                      className="p-0.5 hover:bg-white/20 rounded-full transition-colors"
+                      title="Clear tag"
+                      aria-label="Clear tag"
+                    >
                       <X size={12} className="sm:size-3.5" />
                     </button>
                   </div>

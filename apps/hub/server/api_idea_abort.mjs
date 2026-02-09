@@ -1,5 +1,6 @@
 import { getActiveGenerationProcess } from './api_idea_prioritize.mjs';
-import fs from 'node:fs/promises';
+import { writeJsonAtomic } from '../../../packages/shared/atomic_fs.mjs';
+import { normalizeBuildStatus } from '../../../packages/shared/json_contract.mjs';
 import path from 'node:path';
 
 export async function handleIdeaAbort(req, res, { labRuntime }) {
@@ -17,13 +18,13 @@ export async function handleIdeaAbort(req, res, { labRuntime }) {
   }
 
   try {
-    // ALWAYS update build_status.json to idle
+    // ALWAYS update build_status.json to idle (atomic)
     const p = path.join(labRuntime, 'data', 'build_status.json');
-    await fs.writeFile(p, JSON.stringify({
+    await writeJsonAtomic(p, normalizeBuildStatus({
       status: 'idle',
       stage: 'aborted',
       updatedAt: new Date().toISOString()
-    }, null, 2));
+    }));
 
     res.writeHead(200, { 'Content-Type': 'application/json; charset=utf-8' });
     res.end(JSON.stringify({ ok: true, message: 'Aborted successfully' }));
