@@ -34,4 +34,26 @@ export interface Idea {
   implementedAt?: string;
   outputDate?: string;
   status?: 'new' | 'filtered' | 'backlog' | 'implemented' | 'picked';
+
+  // Targeted Research fields
+  campaignId?: string;
+  topicTag?: string;
+  isTargeted?: boolean;
+  originalAnchor?: string;
+  perspectiveTags?: string[];
+  challengesOriginal?: string;
+}
+
+export interface Campaign {
+  campaignId: string;
+  topicTag: string;
+  title?: string;
+  originalAnchor: string;
+  createdAt: string;
+  options?: { creative?: number; count?: number; lang?: string };
+  stats: { total: number; built: number; failed: number; running: number };
+  perspectiveConfig?: {
+    dimensions: string[];
+    selectionSignals: unknown[];
+  };
 }

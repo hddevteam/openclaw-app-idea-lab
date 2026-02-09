@@ -1,6 +1,6 @@
 import React from 'react';
-import { Check, Trash2, Clock, Fingerprint } from 'lucide-react';
-import { Idea } from '../types/idea';
+import { Check, Trash2, Clock, Fingerprint, Crosshair } from 'lucide-react';
+import type { Idea } from '../../types/idea';
 import { clsx } from 'clsx';
 import { twMerge } from 'tailwind-merge';
 
@@ -122,6 +122,40 @@ export const IdeaCard: React.FC<IdeaCardProps> = ({
       <p className="text-xs text-[#666] dark:text-[#86868b] leading-relaxed line-clamp-2">
         {idea.hudScenario}
       </p>
+
+      {/* Targeted Research: challengesOriginal */}
+      {idea.isTargeted && idea.challengesOriginal && (
+        <div className="flex gap-2 items-start px-3 py-2 rounded-xl bg-amber-50/60 dark:bg-amber-900/10 border border-amber-100/40 dark:border-amber-900/20">
+          <Crosshair size={12} className="shrink-0 mt-0.5 text-amber-600 dark:text-amber-400" />
+          <p className="text-[9px] leading-relaxed text-amber-700 dark:text-amber-300 font-medium line-clamp-2">
+            {idea.challengesOriginal}
+          </p>
+        </div>
+      )}
+
+      {/* Targeted Research: perspectiveTags */}
+      {idea.isTargeted && idea.perspectiveTags && idea.perspectiveTags.length > 0 && (
+        <div className="flex flex-wrap gap-1">
+          {idea.perspectiveTags.map((tag) => {
+            const [dim, val] = tag.split(':');
+            return (
+              <span
+                key={tag}
+                className={cn(
+                  "px-1.5 py-0.5 rounded-md text-[8px] font-bold uppercase tracking-wider border",
+                  dim === 'scope' && "bg-violet-50 text-violet-600 border-violet-100 dark:bg-violet-900/20 dark:text-violet-400 dark:border-violet-900/30",
+                  dim === 'user' && "bg-teal-50 text-teal-600 border-teal-100 dark:bg-teal-900/20 dark:text-teal-400 dark:border-teal-900/30",
+                  dim === 'interaction' && "bg-rose-50 text-rose-600 border-rose-100 dark:bg-rose-900/20 dark:text-rose-400 dark:border-rose-900/30",
+                  dim === 'business' && "bg-amber-50 text-amber-600 border-amber-100 dark:bg-amber-900/20 dark:text-amber-400 dark:border-amber-900/30",
+                  !['scope', 'user', 'interaction', 'business'].includes(dim) && "bg-gray-50 text-gray-600 border-gray-100 dark:bg-gray-800/20 dark:text-gray-400 dark:border-gray-800/30"
+                )}
+              >
+                {val || tag}
+              </span>
+            );
+          })}
+        </div>
+      )}
 
       {idea.complexityBudget && (
         <div className="flex items-center gap-3 px-3 py-2 rounded-xl bg-blue-50/50 dark:bg-blue-900/10 border border-blue-100/30 dark:border-blue-900/20">

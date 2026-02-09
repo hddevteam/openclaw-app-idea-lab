@@ -17,6 +17,7 @@ import { handleIdeaRestore } from './api_idea_restore.mjs';
 import { handleIdeaStatusRestore } from './api_idea_status_restore.mjs';
 import { handleIdeaAbort } from './api_idea_abort.mjs';
 import { handleRagQuery, handleRagReindex } from './api_rag.mjs';
+import { handleTargetedResearch, handleTargetedResearchStatus, handleCampaigns } from './api_targeted_research.mjs';
 import { deleteOutput } from './manifest_dynamic.mjs';
 
 const SPA_DIST = path.join(HUB_ROOT, 'dist');
@@ -239,6 +240,36 @@ const server = http.createServer(async (req, res) => {
   if(url.pathname === '/api/idea-research' && req.method === 'POST'){
     try{
       await handleIdeaResearch(req, res, { labRoot: LAB_ROOT });
+    }catch(e){
+      res.writeHead(500, { 'Content-Type': 'application/json; charset=utf-8' });
+      res.end(JSON.stringify({ ok:false, error: String(e?.message||e) }));
+    }
+    return;
+  }
+
+  if(url.pathname === '/api/idea/research/targeted' && req.method === 'POST'){
+    try{
+      await handleTargetedResearch(req, res, { labRoot: LAB_ROOT });
+    }catch(e){
+      if(!res.headersSent) res.writeHead(500, { 'Content-Type': 'application/json; charset=utf-8' });
+      res.end(JSON.stringify({ ok:false, error: String(e?.message||e) }));
+    }
+    return;
+  }
+
+  if(url.pathname === '/api/idea/research/targeted/status' && req.method === 'GET'){
+    try{
+      handleTargetedResearchStatus(req, res);
+    }catch(e){
+      res.writeHead(500, { 'Content-Type': 'application/json; charset=utf-8' });
+      res.end(JSON.stringify({ ok:false, error: String(e?.message||e) }));
+    }
+    return;
+  }
+
+  if(url.pathname === '/api/campaigns' && req.method === 'GET'){
+    try{
+      await handleCampaigns(req, res, { labRuntime: LAB_RUNTIME });
     }catch(e){
       res.writeHead(500, { 'Content-Type': 'application/json; charset=utf-8' });
       res.end(JSON.stringify({ ok:false, error: String(e?.message||e) }));

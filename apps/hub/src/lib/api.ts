@@ -1,6 +1,6 @@
 import type { Feedback } from '../types/feedback';
 import type { Manifest } from '../types/manifest';
-import type { Idea } from '../types/idea';
+import type { Idea, Campaign } from '../types/idea';
 
 export async function fetchManifest(): Promise<Manifest> {
   const r = await fetch('/api/manifest');
@@ -174,4 +174,143 @@ export async function abortIdeaGeneration(): Promise<void> {
   if (!r.ok) throw new Error(`abort http ${r.status}`);
   const j = await r.json();
   if (!j.ok) throw new Error(j.error || 'abort failed');
+}
+
+// ── Targeted Research ─────────────────────────────────────────
+
+export interface TargetedResearchOpts {
+  topic: string;
+  creative?: number;
+  count?: number;
+}
+
+export interface TargetedResearchSSEEvent {
+  event: string;
+  data: Record<string, unknown>;
+}
+
+/**
+ * Run targeted research with SSE streaming progress.
+ * Returns an EventSource-like controller.
+ */
+export function runTargetedResearchSSE(
+  opts: TargetedResearchOpts,
+  handlers: {
+    onEvent?: (evt: TargetedResearchSSEEvent) => void;
+    onComplete?: (data: { campaign: Campaign | null; ideas: Idea[] }) => void;
+    onError?: (err: string) => void;
+  }
+): { abort: () => void } {
+  const ctrl = new AbortController();
+
+  (async () => {
+    try {
+      const r = await fetch('/api/idea/research/targeted', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          'Accept': 'text/event-stream',
+        },
+        body: JSON.stringify(opts),
+        signal: ctrl.signal,
+      });
+
+      if (!r.ok) {
+        const j = await r.json().catch(() => ({ error: `HTTP ${r.status}` }));
+        handlers.onError?.(j.error || `HTTP ${r.status}`);
+        return;
+      }
+
+      const reader = r.body?.getReader();
+      if (!reader) { handlers.onError?.('No response body'); return; }
+      const decoder = new TextDecoder();
+      let buffer = '';
+
+      while (true) {
+        const { done, value } = await reader.read();
+        if (done) break;
+
+        buffer += decoder.decode(value, { stream: true });
+        const parts = buffer.split('\n\n');
+        buffer = parts.pop() || '';
+
+        for (const part of parts) {
+          const lines = part.split('\n');
+          let event = 'message';
+          let data = '';
+          for (const line of lines) {
+            if (line.startsWith('event: ')) event = line.slice(7);
+            else if (line.startsWith('data: ')) data = line.slice(6);
+          }
+          if (!data) continue;
+
+          try {
+            const parsed = JSON.parse(data);
+            handlers.onEvent?.({ event, data: parsed });
+
+            if (event === 'complete') {
+              handlers.onComplete?.({
+                campaign: parsed.campaign || null,
+                ideas: parsed.ideas || [],
+              });
+            }
+            if (event === 'error') {
+              handlers.onError?.(parsed.message || 'Research failed');
+            }
+          } catch {
+            // skip malformed events
+          }
+        }
+      }
+    } catch (err: unknown) {
+      if ((err as Error).name !== 'AbortError') {
+        handlers.onError?.((err as Error).message || 'Connection failed');
+      }
+    }
+  })();
+
+  return {
+    abort: () => ctrl.abort(),
+  };
+}
+
+/**
+ * Run targeted research (non-SSE JSON mode, simpler fallback).
+ */
+export async function runTargetedResearch(opts: TargetedResearchOpts): Promise<{
+  ok: boolean;
+  campaign?: Campaign;
+  ideas?: Idea[];
+  error?: string;
+}> {
+  const r = await fetch('/api/idea/research/targeted', {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify(opts),
+  });
+  if (!r.ok) throw new Error(`targeted research http ${r.status}`);
+  return await r.json();
+}
+
+/**
+ * Fetch targeted research job status.
+ */
+export async function fetchTargetedResearchStatus(): Promise<{
+  status: 'idle' | 'running';
+  topic?: string;
+  startedAt?: string;
+}> {
+  const r = await fetch('/api/idea/research/targeted/status');
+  if (!r.ok) return { status: 'idle' };
+  return await r.json();
+}
+
+/**
+ * Fetch all campaigns.
+ */
+export async function fetchCampaigns(): Promise<Campaign[]> {
+  const r = await fetch('/api/campaigns');
+  if (!r.ok) throw new Error(`campaigns http ${r.status}`);
+  const j = await r.json();
+  return j.campaigns || [];
 }

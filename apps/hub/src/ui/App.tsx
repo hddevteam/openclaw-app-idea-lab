@@ -13,18 +13,20 @@ import {
   saveToQueue,
   prioritizeAndExecute,
   restoreIdeaStatus,
-  restoreIdeaFromFiltered 
+  restoreIdeaFromFiltered,
+  fetchCampaigns,
 } from '../lib/api';
 import type { Feedback } from '../types/feedback';
 import type { ManifestEntry } from '../types/manifest';
-import type { Idea } from '../types/idea';
+import type { Idea, Campaign } from '../types/idea';
 import { NavBar } from './components/NavBar';
 import { ProjectCard } from './components/ProjectCard';
 import { FeedbackModal } from './components/FeedbackModal';
 import { BuildProgress } from './components/BuildProgress';
 
 import { IdeaCard } from './components/IdeaCard';
-import { LayoutGrid, History, Calendar, CheckCircle2, Save, Trash2, X, AlertCircle, Loader2, Search, SortAsc, BookOpen, BrainCircuit, Archive } from 'lucide-react';
+import { TargetedResearchPanel } from './components/TargetedResearchPanel';
+import { LayoutGrid, History, Calendar, CheckCircle2, Save, Trash2, X, AlertCircle, Loader2, Search, SortAsc, BookOpen, BrainCircuit, Archive, Crosshair, ChevronDown, ChevronRight } from 'lucide-react';
 import { clsx } from 'clsx';
 import ReactMarkdown from 'react-markdown';
 import remarkGfm from 'remark-gfm';
@@ -95,6 +97,12 @@ export function App() {
   const [isRestoring, setIsRestoring] = useState(false);
   const [toast, setToast] = useState<{ msg: string; type: 'success' | 'error' } | null>(null);
 
+  // Targeted Research / Campaign state
+  const [showTargetedPanel, setShowTargetedPanel] = useState(false);
+  const [campaigns, setCampaigns] = useState<Campaign[]>([]);
+  const [selectedCampaign, setSelectedCampaign] = useState<string | null>(null);
+  const [collapsedCampaigns, setCollapsedCampaigns] = useState<Set<string>>(new Set());
+
   const showToast = (msg: string, type: 'success' | 'error' = 'success') => {
     setToast({ msg, type });
     setTimeout(() => setToast(null), 3000);
@@ -136,14 +144,16 @@ export function App() {
   const fetchLabIdeas = async (view: 'backlog' | 'filtered' | 'built') => {
     setLoading(true);
     try {
-      const [list, report, index] = await Promise.all([
+      const [list, report, index, campList] = await Promise.all([
         (view === 'backlog' || view === 'built') ? fetchBacklog() : fetchFiltered(),
         fetchTrendsReport().catch(() => ''),
-        fetchResearchIndex().catch(() => '')
+        fetchResearchIndex().catch(() => ''),
+        fetchCampaigns().catch(() => [] as Campaign[]),
       ]);
       setIdeas(list);
       setTrendsReport(report);
       setResearchIndex(index);
+      setCampaigns(campList);
     } catch (_err) {
       showToast('Failed to load ideas', 'error');
     } finally {
@@ -191,6 +201,16 @@ export function App() {
       setIsResearching(false);
       setLoading(false);
     }
+  };
+
+  const handleTargetedComplete = async (campaign: Campaign | null, newIdeas: Idea[]) => {
+    setShowTargetedPanel(false);
+    if (campaign) {
+      showToast(`深度调研完成！生成 ${newIdeas.length} 个创意 (${campaign.topicTag})`);
+    }
+    // Refresh data to show new campaign/ideas
+    await fetchLabIdeas('backlog');
+    setLabView('backlog');
   };
 
   const handleSaveToQueue = async (idea: Idea) => {
@@ -304,6 +324,11 @@ export function App() {
       list = list.filter(i => i.status === 'implemented');
     }
 
+    // Campaign filter
+    if (selectedCampaign) {
+      list = list.filter(i => i.campaignId === selectedCampaign);
+    }
+
     return list.filter(i => {
       const matchSearch = (i.title || '').toLowerCase().includes(search.toLowerCase()) ||
         (i.keywords || []).some(k => k.toLowerCase().includes(search.toLowerCase())) ||
@@ -315,7 +340,28 @@ export function App() {
     }).sort((a, b) => {
       return (a.similarity?.score || 0) - (b.similarity?.score || 0);
     });
-  }, [ideas, search, selectedTag, labView]);
+  }, [ideas, search, selectedTag, labView, selectedCampaign]);
+
+  // Group ideas by campaign for the campaign view
+  const campaignGroups = useMemo(() => {
+    if (labView !== 'backlog') return [];
+    
+    const targeted = ideas.filter(i => i.isTargeted && i.campaignId && i.status !== 'implemented');
+    const groups = new Map<string, { campaign: Campaign | null; ideas: Idea[] }>();
+    
+    for (const idea of targeted) {
+      const cid = idea.campaignId!;
+      if (!groups.has(cid)) {
+        const camp = campaigns.find(c => c.campaignId === cid) || null;
+        groups.set(cid, { campaign: camp, ideas: [] });
+      }
+      groups.get(cid)!.ideas.push(idea);
+    }
+    
+    return [...groups.entries()]
+      .map(([id, g]) => ({ campaignId: id, ...g }))
+      .sort((a, b) => (b.campaign?.createdAt || '').localeCompare(a.campaign?.createdAt || ''));
+  }, [ideas, campaigns, labView]);
 
   const counts = useMemo(() => {
     return {
@@ -363,6 +409,47 @@ export function App() {
             <label className="text-[8px] sm:text-[10px] font-bold text-gray-400 uppercase tracking-widest block">Scenario</label>
             <p className="text-xs sm:text-sm font-medium leading-relaxed text-[#111] dark:text-[#f5f5f7]">{idea.hudScenario}</p>
           </div>
+
+          {/* Targeted: perspectiveTags + challengesOriginal */}
+          {idea.isTargeted && (
+            <div className="space-y-3">
+              {idea.perspectiveTags && idea.perspectiveTags.length > 0 && (
+                <div className="space-y-1.5">
+                  <label className="text-[8px] sm:text-[10px] font-bold text-gray-400 uppercase tracking-widest block">Perspective Tags</label>
+                  <div className="flex flex-wrap gap-1.5">
+                    {idea.perspectiveTags.map(tag => {
+                      const [dim, val] = tag.split(':');
+                      return (
+                        <span key={tag} className={clsx(
+                          "px-2 py-1 rounded-lg text-[9px] font-bold uppercase tracking-wider border",
+                          dim === 'scope' && "bg-violet-50 text-violet-600 border-violet-100 dark:bg-violet-900/20 dark:text-violet-400 dark:border-violet-900/30",
+                          dim === 'user' && "bg-teal-50 text-teal-600 border-teal-100 dark:bg-teal-900/20 dark:text-teal-400 dark:border-teal-900/30",
+                          dim === 'interaction' && "bg-rose-50 text-rose-600 border-rose-100 dark:bg-rose-900/20 dark:text-rose-400 dark:border-rose-900/30",
+                          dim === 'business' && "bg-amber-50 text-amber-600 border-amber-100 dark:bg-amber-900/20 dark:text-amber-400 dark:border-amber-900/30",
+                        )}>
+                          <span className="opacity-50 mr-1">{dim}:</span>{val}
+                        </span>
+                      );
+                    })}
+                  </div>
+                </div>
+              )}
+              {idea.challengesOriginal && (
+                <div className="space-y-1.5">
+                  <label className="text-[8px] sm:text-[10px] font-bold text-gray-400 uppercase tracking-widest block">挑战隐含假设</label>
+                  <div className="p-3 rounded-xl bg-amber-50/60 dark:bg-amber-900/10 border border-amber-100/40 dark:border-amber-900/20">
+                    <p className="text-xs leading-relaxed text-amber-700 dark:text-amber-300 font-medium">{idea.challengesOriginal}</p>
+                  </div>
+                </div>
+              )}
+              {idea.topicTag && (
+                <div className="flex items-center gap-2">
+                  <Crosshair size={12} className="text-indigo-400" />
+                  <span className="text-[9px] font-bold text-indigo-500 uppercase tracking-widest">{idea.topicTag}</span>
+                </div>
+              )}
+            </div>
+          )}
           
           {idea.coreInteractions?.length > 0 && (
             <div className="space-y-3">
@@ -721,6 +808,18 @@ export function App() {
                   <span className="sm:hidden">Index</span>
                 </button>
 
+                <button
+                  onClick={() => setShowTargetedPanel(!showTargetedPanel)}
+                  className={clsx(
+                    "flex items-center gap-2 px-3 sm:px-4 py-2 sm:py-2.5 rounded-xl text-[10px] sm:text-[11px] font-bold uppercase tracking-widest transition-all shrink-0",
+                    showTargetedPanel ? "bg-indigo-600 text-white shadow-lg shadow-indigo-500/30" : "bg-[#f5f5f7] dark:bg-[#2d2d2f] text-gray-500 hover:bg-gray-200"
+                  )}
+                >
+                  <Crosshair size={13} className="sm:size-3.5" />
+                  <span className="hidden sm:inline">深度调研</span>
+                  <span className="sm:hidden">调研</span>
+                </button>
+
                 {selectedTag && (
                   <div className="flex items-center gap-2 px-3 py-1.5 bg-blue-600 text-white rounded-xl text-[9px] sm:text-[10px] font-bold uppercase tracking-wider animate-in zoom-in duration-200 shrink-0">
                     <span>#{selectedTag}</span>
@@ -744,6 +843,119 @@ export function App() {
             </div>
 
             <div className="grid grid-cols-1 lg:grid-cols-12 gap-8 items-start pb-20">
+              {/* Targeted Research Panel */}
+              {showTargetedPanel && (
+                <div className="lg:col-span-12 animate-in slide-in-from-top duration-300">
+                  <TargetedResearchPanel 
+                    onComplete={handleTargetedComplete}
+                    onClose={() => setShowTargetedPanel(false)}
+                  />
+                </div>
+              )}
+
+              {/* Campaign Groups (only in backlog view when not filtering by campaign) */}
+              {labView === 'backlog' && !selectedCampaign && campaignGroups.length > 0 && !search && !selectedTag && (
+                <div className="lg:col-span-12 space-y-3">
+                  <div className="flex items-center gap-2 px-1">
+                    <Crosshair size={14} className="text-indigo-500" />
+                    <h3 className="text-[10px] font-bold text-gray-400 uppercase tracking-widest">
+                      深度调研集合 ({campaignGroups.length})
+                    </h3>
+                  </div>
+                  <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-3">
+                    {campaignGroups.map(({ campaignId, campaign, ideas: campIdeas }) => {
+                      const isCollapsed = collapsedCampaigns.has(campaignId);
+                      return (
+                        <div
+                          key={campaignId}
+                          className="rounded-2xl border border-indigo-100 dark:border-indigo-900/30 bg-white dark:bg-[#1c1c1e] overflow-hidden transition-all hover:shadow-lg hover:border-indigo-300 dark:hover:border-indigo-700"
+                        >
+                          {/* Campaign header */}
+                          <button
+                            onClick={() => {
+                              setCollapsedCampaigns(prev => {
+                                const next = new Set(prev);
+                                if (next.has(campaignId)) next.delete(campaignId);
+                                else next.add(campaignId);
+                                return next;
+                              });
+                            }}
+                            className="w-full px-4 py-3 flex items-center gap-3 text-left hover:bg-indigo-50/50 dark:hover:bg-indigo-900/10 transition-colors"
+                          >
+                            {isCollapsed ? <ChevronRight size={14} className="text-indigo-400 shrink-0" /> : <ChevronDown size={14} className="text-indigo-400 shrink-0" />}
+                            <div className="flex-1 min-w-0">
+                              <div className="flex items-center gap-2">
+                                <h4 className="text-sm font-bold truncate">{campaign?.topicTag || campaignId}</h4>
+                                <span className="px-1.5 py-0.5 rounded-md bg-indigo-50 dark:bg-indigo-900/20 text-indigo-600 dark:text-indigo-400 text-[8px] font-bold uppercase border border-indigo-100 dark:border-indigo-900/30">
+                                  {campIdeas.length} ideas
+                                </span>
+                              </div>
+                              {campaign?.originalAnchor && (
+                                <p className="text-[10px] text-gray-400 truncate mt-0.5">{campaign.originalAnchor}</p>
+                              )}
+                            </div>
+                            <button
+                              onClick={(e) => { e.stopPropagation(); setSelectedCampaign(campaignId); }}
+                              className="px-2.5 py-1 rounded-lg bg-indigo-600 text-white text-[9px] font-bold shrink-0 hover:bg-indigo-700 transition-colors"
+                            >
+                              查看
+                            </button>
+                          </button>
+
+                          {/* Collapsed preview: perspective tag summary */}
+                          {!isCollapsed && (
+                            <div className="px-4 pb-3 space-y-2 animate-in fade-in duration-200">
+                              <div className="flex flex-wrap gap-1">
+                                {(() => {
+                                  const allTags = campIdeas.flatMap(i => i.perspectiveTags || []);
+                                  const uniq = [...new Set(allTags)];
+                                  return uniq.slice(0, 8).map(tag => {
+                                    const [dim, val] = tag.split(':');
+                                    return (
+                                      <span key={tag} className={clsx(
+                                        "px-1.5 py-0.5 rounded-md text-[7px] font-bold uppercase tracking-wider border",
+                                        dim === 'scope' && "bg-violet-50 text-violet-600 border-violet-100 dark:bg-violet-900/20 dark:text-violet-400 dark:border-violet-900/30",
+                                        dim === 'user' && "bg-teal-50 text-teal-600 border-teal-100 dark:bg-teal-900/20 dark:text-teal-400 dark:border-teal-900/30",
+                                        dim === 'interaction' && "bg-rose-50 text-rose-600 border-rose-100 dark:bg-rose-900/20 dark:text-rose-400 dark:border-rose-900/30",
+                                        !['scope', 'user', 'interaction'].includes(dim) && "bg-gray-50 text-gray-500 border-gray-100 dark:bg-gray-800/20 dark:text-gray-400 dark:border-gray-800/30"
+                                      )}>
+                                        {val || tag}
+                                      </span>
+                                    );
+                                  });
+                                })()}
+                              </div>
+                              <div className="flex gap-2 text-[9px] text-gray-400 font-medium">
+                                {campaign?.createdAt && (
+                                  <span>{new Date(campaign.createdAt).toLocaleDateString()}</span>
+                                )}
+                              </div>
+                            </div>
+                          )}
+                        </div>
+                      );
+                    })}
+                  </div>
+                </div>
+              )}
+
+              {/* Campaign filter badge */}
+              {selectedCampaign && (
+                <div className="lg:col-span-12 flex items-center gap-2">
+                  <div className="flex items-center gap-2 px-3 py-1.5 bg-indigo-600 text-white rounded-xl text-[9px] sm:text-[10px] font-bold uppercase tracking-wider animate-in zoom-in duration-200">
+                    <Crosshair size={12} />
+                    <span>{campaigns.find(c => c.campaignId === selectedCampaign)?.topicTag || selectedCampaign}</span>
+                    <button
+                      onClick={() => setSelectedCampaign(null)}
+                      className="p-0.5 hover:bg-white/20 rounded-full transition-colors"
+                      title="清除集合筛选"
+                      aria-label="Clear campaign filter"
+                    >
+                      <X size={12} />
+                    </button>
+                  </div>
+                </div>
+              )}
               {/* Main Grid */}
               <div className={clsx(
                 "grid gap-4 transition-all duration-500",

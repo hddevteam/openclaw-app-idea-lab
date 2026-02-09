@@ -194,3 +194,54 @@ export function computeTotalScore(card) {
   );
   return card;
 }
+
+// ---------------------------------------------------------------------------
+// Targeted Research – Idea build-status state machine (§4.1.1)
+// ---------------------------------------------------------------------------
+// Valid transitions:
+//   new → queued → running → built
+//                          → failed → queued (retry)
+//   new → skipped
+// ---------------------------------------------------------------------------
+const TARGETED_IDEA_STATUSES = new Set([
+  'new', 'queued', 'running', 'built', 'failed', 'skipped',
+]);
+
+const VALID_TRANSITIONS = {
+  new:     new Set(['queued', 'skipped']),
+  queued:  new Set(['running']),
+  running: new Set(['built', 'failed']),
+  failed:  new Set(['queued']),
+  // terminal states – no outgoing transitions
+  built:   new Set(),
+  skipped: new Set(),
+};
+
+/**
+ * Validate and perform a targeted-idea status transition.
+ *
+ * @param {string} currentStatus – current status of the idea
+ * @param {string} targetStatus  – desired next status
+ * @returns {{ ok: boolean, status: string, error?: string }}
+ *   - ok=true:  transition is valid, `status` is the new status
+ *   - ok=false: transition is illegal, `status` stays at current, `error` explains why
+ */
+export function normalizeIdeaStatus(currentStatus, targetStatus) {
+  const current = TARGETED_IDEA_STATUSES.has(currentStatus) ? currentStatus : 'new';
+  const target = String(targetStatus || '').toLowerCase().trim();
+
+  if (!TARGETED_IDEA_STATUSES.has(target)) {
+    return { ok: false, status: current, error: `unknown target status: "${targetStatus}"` };
+  }
+
+  if (current === target) {
+    return { ok: true, status: current };
+  }
+
+  const allowed = VALID_TRANSITIONS[current];
+  if (!allowed || !allowed.has(target)) {
+    return { ok: false, status: current, error: `illegal transition: ${current} → ${target}` };
+  }
+
+  return { ok: true, status: target };
+}

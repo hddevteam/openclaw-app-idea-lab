@@ -4,7 +4,8 @@
   "version": "0.0.0",
   "type": "module",
   "scripts": {
-    "lint": "eslint ."
+    "lint": "eslint .",
+    "test": "node --test 'core/modules/targeted_research/__tests__/*.test.mjs'"
   },
   "devDependencies": {
     "@eslint/js": "^9.39.1",
