@@ -12,7 +12,6 @@ interface IdeaCardProps {
   idea: Idea;
   onSelect: (idea: Idea) => void;
   onDelete?: (id: string) => void;
-  onTagClick?: (tag: string) => void;
   isSelected?: boolean;
   isMultiSelectMode?: boolean;
   isBatchSelected?: boolean;
@@ -23,7 +22,6 @@ export const IdeaCard: React.FC<IdeaCardProps> = ({
   idea, 
   onSelect, 
   onDelete, 
-  onTagClick, 
   isSelected,
   isMultiSelectMode,
   isBatchSelected,
@@ -76,8 +74,8 @@ export const IdeaCard: React.FC<IdeaCardProps> = ({
       )}
 
       <div className="flex justify-between items-start gap-2">
-        <div className="flex flex-col gap-1.5 min-w-0">
-          <h3 className="text-sm sm:text-base font-bold leading-tight group-hover:text-blue-600 dark:group-hover:text-blue-400 transition-colors truncate">
+        <div className="flex flex-col gap-1.5 min-w-0 flex-1">
+          <h3 className="text-sm sm:text-base font-bold leading-tight group-hover:text-blue-600 dark:group-hover:text-blue-400 transition-colors break-words whitespace-normal">
             {idea.title}
           </h3>
           {idea.visualTheme && (
@@ -136,13 +134,13 @@ export const IdeaCard: React.FC<IdeaCardProps> = ({
       {/* Targeted Research: perspectiveTags */}
       {idea.isTargeted && idea.perspectiveTags && idea.perspectiveTags.length > 0 && (
         <div className="flex flex-wrap gap-1">
-          {idea.perspectiveTags.map((tag) => {
+          {idea.perspectiveTags.slice(0, 3).map((tag) => {
             const [dim, val] = tag.split(':');
             return (
               <span
                 key={tag}
                 className={cn(
-                  "px-1.5 py-0.5 rounded-md text-[8px] font-bold uppercase tracking-wider border",
+                  "px-1.5 py-0.5 rounded-md text-[7px] font-bold uppercase tracking-wider border",
                   dim === 'scope' && "bg-violet-50 text-violet-600 border-violet-100 dark:bg-violet-900/20 dark:text-violet-400 dark:border-violet-900/30",
                   dim === 'user' && "bg-teal-50 text-teal-600 border-teal-100 dark:bg-teal-900/20 dark:text-teal-400 dark:border-teal-900/30",
                   dim === 'interaction' && "bg-rose-50 text-rose-600 border-rose-100 dark:bg-rose-900/20 dark:text-rose-400 dark:border-rose-900/30",
@@ -154,46 +152,27 @@ export const IdeaCard: React.FC<IdeaCardProps> = ({
               </span>
             );
           })}
+          {idea.perspectiveTags.length > 3 && (
+            <span className="text-[7px] font-bold text-gray-400 pt-0.5">+{idea.perspectiveTags.length - 3}</span>
+          )}
         </div>
       )}
 
-      {idea.complexityBudget && (
-        <div className="flex items-center gap-3 px-3 py-2 rounded-xl bg-blue-50/50 dark:bg-blue-900/10 border border-blue-100/30 dark:border-blue-900/20">
-          <div className="flex items-center gap-1 text-[9px] font-bold text-blue-600 dark:text-blue-400 uppercase tracking-tighter">
-            <Clock size={10} />
-            <span>{idea.complexityBudget.minutes}m</span>
+      <div className="mt-auto pt-3 border-t border-[#f5f5f7] dark:border-[#2d2d2f]">
+        <div className="flex items-center justify-between text-[10px] font-bold">
+          <div className="flex items-center gap-3">
+             <div className="flex items-center gap-1 text-[#86868b]">
+              <Clock size={11} />
+              <span>{idea.createdAt ? new Date(idea.createdAt).toLocaleDateString() : 'N/A'}</span>
+            </div>
+            {idea.complexityBudget && (
+              <div className="flex items-center gap-1.5 text-blue-600 dark:text-blue-400 opacity-80">
+                <span className="w-1 h-1 rounded-full bg-blue-400" />
+                <span>{idea.complexityBudget.minutes}m / {idea.complexityBudget.screens}S</span>
+              </div>
+            )}
           </div>
-          <div className="w-px h-2 bg-blue-200 dark:bg-blue-800" />
-          <div className="text-[9px] font-bold text-blue-600 dark:text-blue-400 uppercase tracking-tighter">
-            {idea.complexityBudget.screens} SCR
-          </div>
-          <div className="w-px h-2 bg-blue-200 dark:bg-blue-800" />
-          <div className="text-[9px] font-bold text-blue-600 dark:text-blue-400 uppercase tracking-tighter">
-            {idea.complexityBudget.interactions} INTX
-          </div>
-        </div>
-      )}
-
-      <div className="mt-auto space-y-3">
-        <div className="flex flex-wrap gap-1.5">
-          {(idea.keywords || []).slice(0, 4).map((k) => (
-            <button 
-              key={k} 
-              onClick={(e) => { e.stopPropagation(); onTagClick?.(k); }}
-              className="px-2 py-0.5 rounded-md bg-[#f5f5f7] dark:bg-[#2d2d2f] text-[9px] font-bold text-[#666] dark:text-[#86868b] hover:bg-blue-600 hover:text-white transition-colors capitalize"
-            >
-              #{k}
-            </button>
-          ))}
-        </div>
-
-        <div className="flex items-center justify-between pt-3 border-t border-[#f5f5f7] dark:border-[#2d2d2f]">
-          <div className="flex items-center gap-1.5">
-            <Clock size={12} className="text-gray-400" />
-            <span className="text-[10px] font-bold text-[#86868b]">
-              {idea.createdAt ? new Date(idea.createdAt).toLocaleDateString() : 'N/A'}
-            </span>
-          </div>
+          
           <div className="flex gap-2 min-w-0">
             {(idea.sources || []).slice(0, 1).map((s, idx) => (
               <a 
@@ -202,7 +181,7 @@ export const IdeaCard: React.FC<IdeaCardProps> = ({
                 target="_blank"
                 rel="noopener noreferrer"
                 onClick={(e) => e.stopPropagation()}
-                className="text-[10px] font-bold text-blue-500 hover:underline truncate max-w-[100px]"
+                className="text-blue-500 hover:underline truncate max-w-[80px] opacity-80"
               >
                 {s.title || 'Source'}
               </a>

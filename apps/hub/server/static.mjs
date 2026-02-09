@@ -28,7 +28,16 @@ export async function serveFile(res, filePath, reqUrl, contentModifier){
       body = contentModifier(body.toString('utf8'), fp);
     }
 
-    res.writeHead(200, { 'Content-Type': mime[ext] || 'application/octet-stream' });
+    // Hashed assets (e.g. index-CX3oPJKY.js) → long cache; HTML → no-cache
+    const isHashedAsset = /assets\//.test(fp) && /[-.][a-zA-Z0-9]{8,}\.\w+$/.test(path.basename(fp));
+    const cacheControl = isHashedAsset
+      ? 'public, max-age=31536000, immutable'
+      : 'no-cache';
+
+    res.writeHead(200, {
+      'Content-Type': mime[ext] || 'application/octet-stream',
+      'Cache-Control': cacheControl,
+    });
     res.end(body);
   } catch {
     // Let caller decide fallthrough vs 404.
