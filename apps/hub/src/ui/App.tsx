@@ -886,50 +886,54 @@ export function App() {
                           className="rounded-2xl border border-indigo-100 dark:border-indigo-900/30 bg-white dark:bg-[#1c1c1e] overflow-hidden transition-all hover:shadow-lg hover:border-indigo-300 dark:hover:border-indigo-700"
                         >
                           {/* Campaign header */}
-                          <button
-                            onClick={() => {
-                              setCollapsedCampaigns(prev => {
-                                const next = new Set(prev);
-                                if (next.has(campaignId)) next.delete(campaignId);
-                                else next.add(campaignId);
-                                return next;
-                              });
-                            }}
-                            className="w-full px-4 py-3 flex items-center gap-3 text-left hover:bg-indigo-50/50 dark:hover:bg-indigo-900/10 transition-colors"
-                          >
-                            {isCollapsed ? <ChevronRight size={14} className="text-indigo-400 shrink-0" /> : <ChevronDown size={14} className="text-indigo-400 shrink-0" />}
-                            <div className="flex-1 min-w-0">
-                              <div className="flex items-center gap-2">
-                                <h4 className="text-sm font-bold truncate">{campaign?.topicTag || campaignId}</h4>
-                                <span className="px-1.5 py-0.5 rounded-md bg-indigo-50 dark:bg-indigo-900/20 text-indigo-600 dark:text-indigo-400 text-[8px] font-bold uppercase border border-indigo-100 dark:border-indigo-900/30">
-                                  {campIdeas.length} ideas
-                                </span>
+                          <div className="px-4 py-3 space-y-2">
+                            <button
+                              onClick={() => {
+                                setCollapsedCampaigns(prev => {
+                                  const next = new Set(prev);
+                                  if (next.has(campaignId)) next.delete(campaignId);
+                                  else next.add(campaignId);
+                                  return next;
+                                });
+                              }}
+                              className="w-full flex items-start gap-2 text-left hover:opacity-80 transition-opacity"
+                            >
+                              <span className="mt-0.5 shrink-0">
+                                {isCollapsed ? <ChevronRight size={14} className="text-indigo-400" /> : <ChevronDown size={14} className="text-indigo-400" />}
+                              </span>
+                              <div className="min-w-0 flex-1">
+                                <h4 className="text-sm font-bold leading-snug break-words">{campaign?.topicTag || campaignId}</h4>
+                                {campaign?.originalAnchor && campaign.originalAnchor !== campaign.topicTag && (
+                                  <p className="text-[10px] text-gray-400 mt-0.5 line-clamp-2">{campaign.originalAnchor}</p>
+                                )}
                               </div>
-                              {campaign?.originalAnchor && (
-                                <p className="text-[10px] text-gray-400 truncate mt-0.5">{campaign.originalAnchor}</p>
-                              )}
+                              <span className="px-1.5 py-0.5 rounded-md bg-indigo-50 dark:bg-indigo-900/20 text-indigo-600 dark:text-indigo-400 text-[8px] font-bold uppercase border border-indigo-100 dark:border-indigo-900/30 shrink-0">
+                                {campIdeas.length} ideas
+                              </span>
+                            </button>
+                            <div className="flex items-center gap-2 pl-5">
+                              <button
+                                onClick={() => setSelectedCampaign(campaignId)}
+                                className="px-2.5 py-1 rounded-lg bg-indigo-600 text-white text-[9px] font-bold hover:bg-indigo-700 transition-colors"
+                              >
+                                查看
+                              </button>
+                              <button
+                                onClick={() => setBatchBuildCampaignId(campaignId)}
+                                className="px-2.5 py-1 rounded-lg bg-green-600 text-white text-[9px] font-bold hover:bg-green-700 transition-colors flex items-center gap-1"
+                              >
+                                <Package size={10} />
+                                批量生成
+                              </button>
+                              <button
+                                onClick={() => handleDeleteCampaign(campaignId, campaign?.topicTag || campaignId)}
+                                className="px-2 py-1 rounded-lg bg-red-50 dark:bg-red-900/20 text-red-500 text-[9px] font-bold hover:bg-red-100 dark:hover:bg-red-900/40 transition-colors"
+                                title="删除集合"
+                              >
+                                <Trash2 size={12} />
+                              </button>
                             </div>
-                            <button
-                              onClick={(e) => { e.stopPropagation(); setSelectedCampaign(campaignId); }}
-                              className="px-2.5 py-1 rounded-lg bg-indigo-600 text-white text-[9px] font-bold shrink-0 hover:bg-indigo-700 transition-colors"
-                            >
-                              查看
-                            </button>
-                            <button
-                              onClick={(e) => { e.stopPropagation(); setBatchBuildCampaignId(campaignId); }}
-                              className="px-2.5 py-1 rounded-lg bg-green-600 text-white text-[9px] font-bold shrink-0 hover:bg-green-700 transition-colors flex items-center gap-1"
-                            >
-                              <Package size={10} />
-                              批量生成
-                            </button>
-                            <button
-                              onClick={(e) => { e.stopPropagation(); handleDeleteCampaign(campaignId, campaign?.topicTag || campaignId); }}
-                              className="px-2 py-1 rounded-lg bg-red-50 dark:bg-red-900/20 text-red-500 text-[9px] font-bold shrink-0 hover:bg-red-100 dark:hover:bg-red-900/40 transition-colors"
-                              title="删除集合"
-                            >
-                              <Trash2 size={12} />
-                            </button>
-                          </button>
+                          </div>
 
                           {/* Collapsed preview: perspective tag summary */}
                           {!isCollapsed && (
