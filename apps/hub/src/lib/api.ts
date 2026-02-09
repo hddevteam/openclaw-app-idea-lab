@@ -315,6 +315,17 @@ export async function fetchCampaigns(): Promise<Campaign[]> {
   return j.campaigns || [];
 }
 
+/**
+ * Delete a campaign and all its associated ideas + batch jobs.
+ */
+export async function deleteCampaign(campaignId: string): Promise<{ removed: boolean; removedIdeas: number; removedJobs: number }> {
+  const r = await fetch(`/api/campaigns?campaignId=${encodeURIComponent(campaignId)}`, { method: 'DELETE' });
+  if (!r.ok) throw new Error(`delete campaign http ${r.status}`);
+  const j = await r.json();
+  if (!j.ok) throw new Error(j.error || 'delete campaign failed');
+  return { removed: j.removed, removedIdeas: j.removedIdeas, removedJobs: j.removedJobs };
+}
+
 // ── Batch Build API ──────────────────────────────────────────
 
 export async function createBatchJob(campaignId: string, ideaIds: string[]): Promise<{ jobId: string }> {

@@ -67,3 +67,24 @@ export function normalizeCampaignList(raw) {
     campaigns: campaigns.filter(c => c && c.campaignId),
   };
 }
+
+/**
+ * Remove a campaign from the container. Returns new container (immutable).
+ * Does NOT touch idea_backlog or batch_jobs — caller is responsible for those.
+ * @param {{ updatedAt: string, campaigns: Array }} container
+ * @param {string} campaignId
+ * @param {{ now: () => string }} [clock]
+ * @returns {{ container: { updatedAt: string, campaigns: Array }, removed: object | null }}
+ */
+export function removeCampaign(container, campaignId, clock) {
+  const now = clock ? clock.now() : new Date().toISOString();
+  const norm = normalizeCampaignList(container);
+  const removed = norm.campaigns.find(c => c.campaignId === campaignId) || null;
+  return {
+    container: {
+      updatedAt: now,
+      campaigns: norm.campaigns.filter(c => c.campaignId !== campaignId),
+    },
+    removed,
+  };
+}

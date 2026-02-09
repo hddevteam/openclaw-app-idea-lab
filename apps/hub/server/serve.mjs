@@ -17,7 +17,7 @@ import { handleIdeaRestore } from './api_idea_restore.mjs';
 import { handleIdeaStatusRestore } from './api_idea_status_restore.mjs';
 import { handleIdeaAbort } from './api_idea_abort.mjs';
 import { handleRagQuery, handleRagReindex } from './api_rag.mjs';
-import { handleTargetedResearch, handleTargetedResearchStatus, handleCampaigns } from './api_targeted_research.mjs';
+import { handleTargetedResearch, handleTargetedResearchStatus, handleCampaigns, handleCampaignDelete } from './api_targeted_research.mjs';
 import {
   handleBatchCreate, handleBatchStart, handleBatchStatus,
   handleBatchPause, handleBatchResume, handleBatchCancel,
@@ -275,6 +275,15 @@ const server = http.createServer(async (req, res) => {
   if(url.pathname === '/api/campaigns' && req.method === 'GET'){
     try{
       await handleCampaigns(req, res, { labRuntime: LAB_RUNTIME });
+    }catch(e){
+      res.writeHead(500, { 'Content-Type': 'application/json; charset=utf-8' });
+      res.end(JSON.stringify({ ok:false, error: String(e?.message||e) }));
+    }
+    return;
+  }
+  if(url.pathname === '/api/campaigns' && req.method === 'DELETE'){
+    try{
+      await handleCampaignDelete(req, res, { labRuntime: LAB_RUNTIME });
     }catch(e){
       res.writeHead(500, { 'Content-Type': 'application/json; charset=utf-8' });
       res.end(JSON.stringify({ ok:false, error: String(e?.message||e) }));

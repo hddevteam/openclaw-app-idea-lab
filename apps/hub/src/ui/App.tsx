@@ -15,6 +15,7 @@ import {
   restoreIdeaStatus,
   restoreIdeaFromFiltered,
   fetchCampaigns,
+  deleteCampaign,
 } from '../lib/api';
 import type { Feedback } from '../types/feedback';
 import type { ManifestEntry } from '../types/manifest';
@@ -213,6 +214,18 @@ export function App() {
     // Refresh data to show new campaign/ideas
     await fetchLabIdeas('backlog');
     setLabView('backlog');
+  };
+
+  const handleDeleteCampaign = async (campaignId: string, topicTag: string) => {
+    if (!confirm(`确定删除集合「${topicTag}」及其所有创意？此操作不可撤销。`)) return;
+    try {
+      const result = await deleteCampaign(campaignId);
+      showToast(`已删除集合「${topicTag}」(${result.removedIdeas} 个创意)`);
+      if (selectedCampaign === campaignId) setSelectedCampaign(null);
+      await fetchLabIdeas('backlog');
+    } catch (err: unknown) {
+      showToast((err as Error).message || '删除失败', 'error');
+    }
   };
 
   const handleSaveToQueue = async (idea: Idea) => {
@@ -908,6 +921,13 @@ export function App() {
                             >
                               <Package size={10} />
                               批量生成
+                            </button>
+                            <button
+                              onClick={(e) => { e.stopPropagation(); handleDeleteCampaign(campaignId, campaign?.topicTag || campaignId); }}
+                              className="px-2 py-1 rounded-lg bg-red-50 dark:bg-red-900/20 text-red-500 text-[9px] font-bold shrink-0 hover:bg-red-100 dark:hover:bg-red-900/40 transition-colors"
+                              title="删除集合"
+                            >
+                              <Trash2 size={12} />
                             </button>
                           </button>
 

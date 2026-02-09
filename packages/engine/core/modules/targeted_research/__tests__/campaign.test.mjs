@@ -5,6 +5,7 @@ import {
   buildTopicTag,
   createCampaignMeta,
   normalizeCampaignList,
+  removeCampaign,
 } from '../campaign.mjs';
 
 // Fixed clock for deterministic tests
@@ -127,5 +128,42 @@ describe('normalizeCampaignList', () => {
   it('should handle missing campaigns key', () => {
     const result = normalizeCampaignList({ updatedAt: '...' });
     assert.deepEqual(result.campaigns, []);
+  });
+});
+
+describe('removeCampaign', () => {
+  const container = {
+    updatedAt: '2026-01-01T00:00:00Z',
+    campaigns: [
+      { campaignId: 'camp_a', topicTag: 'A' },
+      { campaignId: 'camp_b', topicTag: 'B' },
+      { campaignId: 'camp_c', topicTag: 'C' },
+    ],
+  };
+
+  it('should remove an existing campaign and return it', () => {
+    const { container: next, removed } = removeCampaign(container, 'camp_b', fixedClock);
+    assert.equal(next.campaigns.length, 2);
+    assert.ok(!next.campaigns.find(c => c.campaignId === 'camp_b'));
+    assert.deepEqual(removed, { campaignId: 'camp_b', topicTag: 'B' });
+    assert.equal(next.updatedAt, fixedClock.now());
+  });
+
+  it('should return null removed when campaignId not found', () => {
+    const { container: next, removed } = removeCampaign(container, 'camp_nonexistent', fixedClock);
+    assert.equal(next.campaigns.length, 3);
+    assert.equal(removed, null);
+  });
+
+  it('should not mutate the original container', () => {
+    const before = JSON.parse(JSON.stringify(container));
+    removeCampaign(container, 'camp_a', fixedClock);
+    assert.deepEqual(container, before);
+  });
+
+  it('should handle empty container', () => {
+    const { container: next, removed } = removeCampaign(null, 'camp_x', fixedClock);
+    assert.deepEqual(next.campaigns, []);
+    assert.equal(removed, null);
   });
 });

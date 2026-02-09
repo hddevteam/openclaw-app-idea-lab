@@ -10,6 +10,9 @@
 import { spawn } from 'node:child_process';
 import path from 'node:path';
 import fs from 'node:fs/promises';
+import { readJsonSafe, writeJsonAtomic, withFileLock } from '../../../packages/shared/atomic_fs.mjs';
+import { removeCampaign } from '../../../packages/engine/core/modules/targeted_research/campaign.mjs';
+import { normalizeIdeaList } from '../../../packages/shared/json_contract.mjs';
 
 // In-flight job tracking (only one targeted research at a time)
 let activeJob = null;
@@ -293,4 +296,67 @@ async function readLatestCampaignResult(labRoot) {
   } catch (_e) {
     return { campaign: null, ideas: [] };
   }
+}
+// ── DELETE /api/campaigns?campaignId=xxx ──────────────────────
+
+/**
+ * Delete a campaign and its associated ideas from backlog + batch jobs.
+ */
+export async function handleCampaignDelete(req, res, { labRuntime }) {
+  const url = new URL(req.url, `http://${req.headers.host}`);
+  const campaignId = url.searchParams.get('campaignId');
+
+  if (!campaignId) {
+    res.writeHead(400, { 'Content-Type': 'application/json; charset=utf-8' });
+    return res.end(JSON.stringify({ ok: false, error: 'campaignId required' }));
+  }
+
+  const campaignsPath = path.join(labRuntime, 'data', 'campaigns.json');
+  const backlogPath = path.join(labRuntime, 'data', 'idea_backlog.json');
+  const batchJobsPath = path.join(labRuntime, 'data', 'batch_jobs.json');
+
+  let removedCampaign = null;
+  let removedIdeasCount = 0;
+  let removedJobsCount = 0;
+
+  // 1. Remove campaign from campaigns.json
+  await withFileLock(campaignsPath, async () => {
+    const raw = await readJsonSafe(campaignsPath, { updatedAt: null, campaigns: [] });
+    const { container, removed } = removeCampaign(raw, campaignId);
+    removedCampaign = removed;
+    await writeJsonAtomic(campaignsPath, container);
+  });
+
+  // 2. Remove associated ideas from backlog
+  await withFileLock(backlogPath, async () => {
+    const raw = await readJsonSafe(backlogPath, { updatedAt: null, ideas: [] });
+    const norm = normalizeIdeaList(raw);
+    const before = norm.ideas.length;
+    const next = norm.ideas.filter(i => i.campaignId !== campaignId);
+    removedIdeasCount = before - next.length;
+    await writeJsonAtomic(backlogPath, { updatedAt: new Date().toISOString(), ideas: next });
+  });
+
+  // 3. Remove associated batch jobs
+  try {
+    await withFileLock(batchJobsPath, async () => {
+      const raw = await readJsonSafe(batchJobsPath, { updatedAt: null, jobs: [] });
+      const jobs = Array.isArray(raw.jobs) ? raw.jobs : [];
+      const before = jobs.length;
+      const next = jobs.filter(j => j.campaignId !== campaignId);
+      removedJobsCount = before - next.length;
+      await writeJsonAtomic(batchJobsPath, { updatedAt: new Date().toISOString(), jobs: next });
+    });
+  } catch (_e) {
+    // batch_jobs.json may not exist yet — that's fine
+  }
+
+  res.writeHead(200, { 'Content-Type': 'application/json; charset=utf-8' });
+  res.end(JSON.stringify({
+    ok: true,
+    campaignId,
+    removed: !!removedCampaign,
+    removedIdeas: removedIdeasCount,
+    removedJobs: removedJobsCount,
+  }));
 }
