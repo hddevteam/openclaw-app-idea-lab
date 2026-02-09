@@ -1,7 +1,7 @@
 # 01 - Targeted Research & Batch Realization 设计文档
 
 > **Last Updated**: 2026-02-09
-> **Status**: MVP-2 Done — MVP-3 Pending
+> **Status**: MVP-3 Done — All MVP slices complete
 
 ## 1. 功能概述
 目前研究流程（Research V2）主要基于大趋势进行"被动发现"。本项目旨在引入"目标导向型调研"（Targeted Research），允许用户输入特定需求锚点，系统围绕该锚点进行多维度调研并产出具有关联标签的 Idea 集合，支持后续的批量化实现。
@@ -189,7 +189,7 @@ new → skipped
 4. [x] 将网络/LLM/FS 依赖做成可注入的 provider，以便单测与离线回放。 ✅ MVP-0.5
 5. [x] Hub 后端增加 `/api/idea/research/targeted` 接口（返回 campaignId + ideas 预览）。 ✅ MVP-2
 6. [x] Hub 前端增加"深度调研"入口：输入 Topic + 选项，支持按标签/视角分组与批量选择。 ✅ MVP-2
-7. [ ] 批量实现：将选中的 ideas 发送到生成/构建队列（可先做"导出 JSON/生成任务清单"作为 MVP）。 ⬜ MVP-3
+7. [x] 批量实现：将选中的 ideas 发送到生成/构建队列（可先做"导出 JSON/生成任务清单"作为 MVP）。 ✅ MVP-3
 
 ## 5.1 针对用户的两个关键问题：推荐解决方案
 
@@ -405,9 +405,13 @@ research_pipeline.mjs (共享骨架)
   - 前端 TargetedResearchPanel（6 步进度条 + 实时日志 + abort）
   - 进度推送采用 SSE（Server-Sent Events）
   - Vite build 通过（1969 modules），96 测试全部通过
-5. ⬜ **MVP-3：批量实现工作流**
-  - "导出任务清单/队列"优先于直接并发生成，避免资源争用与失败重试复杂度
-  - 实现 batch job 状态驱动 runner（见 §5.1 Q2）
+5. ✅ **MVP-3：批量实现工作流** (2026-02-09)
+  - `batch_job.mjs`: 纯函数状态机 (job: pending→running→done/paused/cancelled, item: queued→running→built/failed, retry/skip)，55 测试全通过
+  - `batch_runner.mjs`: 顺序执行 runner — 状态驱动取 next queued item → spawn run_idle_job.sh → poll build_status.json
+  - `api_batch.mjs`: 10 个 Hub API 端点 (create/start/status/pause/resume/cancel/retry-item/skip-item/events-SSE/jobs-list)
+  - `BatchBuildPanel.tsx`: 勾选 idea → 开始 → 实时 SSE 进度 → 暂停/恢复/取消
+  - App.tsx: campaign 卡片新增「批量生成」按钮
+  - 测试: 151 (135 engine + 16 shared), 0 fail; Vite build 1970 modules OK
 
 ## 9. 超时与稳定性（与 Research V2 共存）
 Targeted Research 的典型耗时更长（topic 更深，context 更大）。建议：
