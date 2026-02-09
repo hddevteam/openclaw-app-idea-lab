@@ -1,7 +1,7 @@
 # 01 - Targeted Research & Batch Realization 设计文档
 
 > **Last Updated**: 2026-02-09
-> **Status**: Draft → Review Incorporated
+> **Status**: MVP-2 Done — MVP-3 Pending
 
 ## 1. 功能概述
 目前研究流程（Research V2）主要基于大趋势进行"被动发现"。本项目旨在引入"目标导向型调研"（Targeted Research），允许用户输入特定需求锚点，系统围绕该锚点进行多维度调研并产出具有关联标签的 Idea 集合，支持后续的批量化实现。
@@ -183,13 +183,13 @@ new → skipped
 - 点击某 campaign 展示该 campaign 下所有已构建项目
 
 ## 5. 开发路线图
-1. [ ] 先做"纯函数模块"与契约（tag/hash、入参校验、idea 打标、perspective slots 定义）。
-2. [ ] **从 `planner_research.mjs` 抽取 `research_pipeline.mjs` 复用层**（确保 V2 不 break）。
-3. [ ] 在脚本侧支持 `--topic "..."` / `--creative` / `--count` 等参数，并能落盘到 backlog（带标签 + perspectiveTags）。
-4. [ ] 将网络/LLM/FS 依赖做成可注入的 provider，以便单测与离线回放。
-5. [ ] Hub 后端增加 `/api/idea/research/targeted` 接口（返回 campaignId + ideas 预览）。
-6. [ ] Hub 前端增加"深度调研"入口：输入 Topic + 选项，支持按标签/视角分组与批量选择。
-7. [ ] 批量实现：将选中的 ideas 发送到生成/构建队列（可先做"导出 JSON/生成任务清单"作为 MVP）。
+1. [x] 先做"纯函数模块"与契约（tag/hash、入参校验、idea 打标、perspective slots 定义）。 ✅ MVP-0
+2. [x] **从 `planner_research.mjs` 抽取 `research_pipeline.mjs` 复用层**（确保 V2 不 break）。 ✅ MVP-0.5
+3. [x] 在脚本侧支持 `--topic "..."` / `--creative` / `--count` 等参数，并能落盘到 backlog（带标签 + perspectiveTags）。 ✅ MVP-1
+4. [x] 将网络/LLM/FS 依赖做成可注入的 provider，以便单测与离线回放。 ✅ MVP-0.5
+5. [x] Hub 后端增加 `/api/idea/research/targeted` 接口（返回 campaignId + ideas 预览）。 ✅ MVP-2
+6. [x] Hub 前端增加"深度调研"入口：输入 Topic + 选项，支持按标签/视角分组与批量选择。 ✅ MVP-2
+7. [ ] 批量实现：将选中的 ideas 发送到生成/构建队列（可先做"导出 JSON/生成任务清单"作为 MVP）。 ⬜ MVP-3
 
 ## 5.1 针对用户的两个关键问题：推荐解决方案
 
@@ -387,23 +387,25 @@ research_pipeline.mjs (共享骨架)
 ## 8. 迭代切片（按可交付的 MVP 分阶段）
 为避免一次性改动过大，建议按以下顺序交付：
 
-1. **MVP-0：纯函数 + 测试先行**
-  - 完成 `campaign/tagging/parseArgs/perspectiveSlots` 与对应单测
+1. ✅ **MVP-0：纯函数 + 测试先行** (2026-02-09)
+  - 完成 `campaign/tagging/parseArgs/perspectiveSlots` 与对应单测（86 tests）
   - 使用 `node:test` + `node:assert/strict`
-2. **MVP-0.5：Pipeline 复用层抽取**
+2. ✅ **MVP-0.5：Pipeline 复用层抽取** (2026-02-09)
   - 从现有 `planner_research.mjs` 抽取 `research_pipeline.mjs` 基础流程层
   - 确保 Research V2 在重构后行为不变（回归测试）
   - 将网络/LLM/FS 依赖做成可注入的 provider（见 §6.2）
-3. **MVP-1：脚本可用（本地手动跑）**
-  - `node planner_research.mjs --mode targeted --topic "..."`
-  - 能写入 backlog，并带 topicTag/campaignId + perspectiveTags
-4. **MVP-2：Hub API + 前端输入**
-  - `/api/idea/research/targeted`：接收 topic + 选项，启动调研
-  - 前端 idea 卡片展示 perspectiveTags 标签 + challengesOriginal 提示
-  - 支持按视角维度筛选/分组（如"只看 scope:mvp 的 ideas"）
-  - 前端分组展示可用最简实现（不做批量构建，只做生成与分组展示）
-  - 进度推送采用 **SSE（Server-Sent Events）**（见 §5.2）
-5. **MVP-3：批量实现工作流**
+  - Brave 搜索改为顺序执行 + 1.2s 延迟，避免 429
+3. ✅ **MVP-1：脚本可用（本地手动跑）** (2026-02-09)
+  - `node runner.mjs --topic "..."` 实机运行成功（campaign `camp_20260209T0338_1f07`）
+  - 能写入 backlog，并带 topicTag/campaignId + perspectiveTags（6 个多视角 ideas）
+4. ✅ **MVP-2：Hub API + 前端输入** (2026-02-09)
+  - `/api/idea/research/targeted`：POST (SSE+JSON) + GET status + GET campaigns
+  - 前端 idea 卡片展示 perspectiveTags 彩色标签 + challengesOriginal 提示
+  - Campaign 分组视图（可折叠 + 视角汇总 + 筛选 badge）
+  - 前端 TargetedResearchPanel（6 步进度条 + 实时日志 + abort）
+  - 进度推送采用 SSE（Server-Sent Events）
+  - Vite build 通过（1969 modules），96 测试全部通过
+5. ⬜ **MVP-3：批量实现工作流**
   - "导出任务清单/队列"优先于直接并发生成，避免资源争用与失败重试复杂度
   - 实现 batch job 状态驱动 runner（见 §5.1 Q2）
 
