@@ -26,7 +26,8 @@ import { BuildProgress } from './components/BuildProgress';
 
 import { IdeaCard } from './components/IdeaCard';
 import { TargetedResearchPanel } from './components/TargetedResearchPanel';
-import { LayoutGrid, History, Calendar, CheckCircle2, Save, Trash2, X, AlertCircle, Loader2, Search, SortAsc, BookOpen, BrainCircuit, Archive, Crosshair, ChevronDown, ChevronRight } from 'lucide-react';
+import BatchBuildPanel from './components/BatchBuildPanel';
+import { LayoutGrid, History, Calendar, CheckCircle2, Save, Trash2, X, AlertCircle, Loader2, Search, SortAsc, BookOpen, BrainCircuit, Archive, Crosshair, ChevronDown, ChevronRight, Package } from 'lucide-react';
 import { clsx } from 'clsx';
 import ReactMarkdown from 'react-markdown';
 import remarkGfm from 'remark-gfm';
@@ -102,6 +103,7 @@ export function App() {
   const [campaigns, setCampaigns] = useState<Campaign[]>([]);
   const [selectedCampaign, setSelectedCampaign] = useState<string | null>(null);
   const [collapsedCampaigns, setCollapsedCampaigns] = useState<Set<string>>(new Set());
+  const [batchBuildCampaignId, setBatchBuildCampaignId] = useState<string | null>(null);
 
   const showToast = (msg: string, type: 'success' | 'error' = 'success') => {
     setToast({ msg, type });
@@ -900,6 +902,13 @@ export function App() {
                             >
                               查看
                             </button>
+                            <button
+                              onClick={(e) => { e.stopPropagation(); setBatchBuildCampaignId(campaignId); }}
+                              className="px-2.5 py-1 rounded-lg bg-green-600 text-white text-[9px] font-bold shrink-0 hover:bg-green-700 transition-colors flex items-center gap-1"
+                            >
+                              <Package size={10} />
+                              批量生成
+                            </button>
                           </button>
 
                           {/* Collapsed preview: perspective tag summary */}
@@ -1013,6 +1022,19 @@ export function App() {
           </div>
         )}
       </main>
+
+      {/* Batch Build Modal */}
+      {batchBuildCampaignId && (() => {
+        const campIdeas = ideas.filter(i => i.campaignId === batchBuildCampaignId && i.status !== 'implemented');
+        return (
+          <BatchBuildPanel
+            campaignId={batchBuildCampaignId}
+            ideas={campIdeas}
+            onClose={() => setBatchBuildCampaignId(null)}
+            onRefresh={() => fetchLabIdeas('backlog')}
+          />
+        );
+      })()}
 
       {/* Floating Toast */}
       {toast && (

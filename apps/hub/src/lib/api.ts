@@ -1,6 +1,6 @@
 import type { Feedback } from '../types/feedback';
 import type { Manifest } from '../types/manifest';
-import type { Idea, Campaign } from '../types/idea';
+import type { Idea, Campaign, BatchJob } from '../types/idea';
 
 export async function fetchManifest(): Promise<Manifest> {
   const r = await fetch('/api/manifest');
@@ -313,4 +313,124 @@ export async function fetchCampaigns(): Promise<Campaign[]> {
   if (!r.ok) throw new Error(`campaigns http ${r.status}`);
   const j = await r.json();
   return j.campaigns || [];
+}
+
+// ── Batch Build API ──────────────────────────────────────────
+
+export async function createBatchJob(campaignId: string, ideaIds: string[]): Promise<{ jobId: string }> {
+  const r = await fetch('/api/batch/create', {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({ campaignId, ideaIds }),
+  });
+  if (!r.ok) {
+    const j = await r.json().catch(() => ({ error: `HTTP ${r.status}` }));
+    throw new Error(j.error || `batch create http ${r.status}`);
+  }
+  return await r.json();
+}
+
+export async function startBatchJob(jobId: string): Promise<void> {
+  const r = await fetch('/api/batch/start', {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({ jobId }),
+  });
+  if (!r.ok) {
+    const j = await r.json().catch(() => ({ error: `HTTP ${r.status}` }));
+    throw new Error(j.error || `batch start http ${r.status}`);
+  }
+}
+
+export async function fetchBatchStatus(jobId: string): Promise<BatchJob> {
+  const r = await fetch(`/api/batch/status?jobId=${encodeURIComponent(jobId)}`);
+  if (!r.ok) throw new Error(`batch status http ${r.status}`);
+  const j = await r.json();
+  return j.job;
+}
+
+export async function pauseBatchJob(jobId: string): Promise<void> {
+  const r = await fetch('/api/batch/pause', {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({ jobId }),
+  });
+  if (!r.ok) throw new Error(`batch pause http ${r.status}`);
+}
+
+export async function resumeBatchJob(jobId: string): Promise<void> {
+  const r = await fetch('/api/batch/resume', {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({ jobId }),
+  });
+  if (!r.ok) throw new Error(`batch resume http ${r.status}`);
+}
+
+export async function cancelBatchJob(jobId: string): Promise<void> {
+  const r = await fetch('/api/batch/cancel', {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({ jobId }),
+  });
+  if (!r.ok) throw new Error(`batch cancel http ${r.status}`);
+}
+
+export async function retryBatchItem(jobId: string, ideaId: string): Promise<void> {
+  const r = await fetch('/api/batch/retry-item', {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({ jobId, ideaId }),
+  });
+  if (!r.ok) throw new Error(`batch retry http ${r.status}`);
+}
+
+export async function skipBatchItem(jobId: string, ideaId: string): Promise<void> {
+  const r = await fetch('/api/batch/skip-item', {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({ jobId, ideaId }),
+  });
+  if (!r.ok) throw new Error(`batch skip http ${r.status}`);
+}
+
+export async function fetchBatchJobs(campaignId?: string): Promise<BatchJob[]> {
+  const params = campaignId ? `?campaignId=${encodeURIComponent(campaignId)}` : '';
+  const r = await fetch(`/api/batch/jobs${params}`);
+  if (!r.ok) throw new Error(`batch jobs http ${r.status}`);
+  const j = await r.json();
+  return j.jobs || [];
+}
+
+export interface BatchSSEEvent {
+  event: string;
+  data: Record<string, unknown>;
+}
+
+export function subscribeBatchEvents(
+  jobId: string,
+  handlers: {
+    onEvent?: (evt: BatchSSEEvent) => void;
+    onDone?: () => void;
+    onError?: (err: string) => void;
+  },
+): { close: () => void } {
+  const es = new EventSource(`/api/batch/events?jobId=${encodeURIComponent(jobId)}`);
+
+  const handleMsg = (type: string) => (e: MessageEvent) => {
+    try {
+      const data = JSON.parse(e.data);
+      handlers.onEvent?.({ event: type, data });
+      if (type === 'job:done' || type === 'job:cancelled') handlers.onDone?.();
+    } catch { /* ignore */ }
+  };
+
+  const events = [
+    'connected', 'job:started', 'job:done', 'job:paused', 'job:cancelled', 'job:error',
+    'item:running', 'item:progress', 'item:built', 'item:failed', 'item:error',
+  ];
+  for (const evt of events) es.addEventListener(evt, handleMsg(evt));
+  es.onerror = () => handlers.onError?.('SSE connection lost');
+
+  return { close: () => es.close() };
 }

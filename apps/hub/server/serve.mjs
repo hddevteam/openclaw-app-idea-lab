@@ -18,6 +18,11 @@ import { handleIdeaStatusRestore } from './api_idea_status_restore.mjs';
 import { handleIdeaAbort } from './api_idea_abort.mjs';
 import { handleRagQuery, handleRagReindex } from './api_rag.mjs';
 import { handleTargetedResearch, handleTargetedResearchStatus, handleCampaigns } from './api_targeted_research.mjs';
+import {
+  handleBatchCreate, handleBatchStart, handleBatchStatus,
+  handleBatchPause, handleBatchResume, handleBatchCancel,
+  handleBatchRetryItem, handleBatchSkipItem, handleBatchEvents, handleBatchJobs,
+} from './api_batch.mjs';
 import { deleteOutput } from './manifest_dynamic.mjs';
 
 const SPA_DIST = path.join(HUB_ROOT, 'dist');
@@ -68,7 +73,7 @@ const server = http.createServer(async (req, res) => {
       const raw = await (await import('node:fs/promises')).readFile(p, 'utf8');
       res.writeHead(200, { 'Content-Type': 'application/json; charset=utf-8' });
       res.end(raw);
-    }catch(e){
+    }catch(_e){
       res.writeHead(200, { 'Content-Type': 'application/json; charset=utf-8' });
       res.end(JSON.stringify({ status: 'idle' }));
     }
@@ -271,6 +276,78 @@ const server = http.createServer(async (req, res) => {
     try{
       await handleCampaigns(req, res, { labRuntime: LAB_RUNTIME });
     }catch(e){
+      res.writeHead(500, { 'Content-Type': 'application/json; charset=utf-8' });
+      res.end(JSON.stringify({ ok:false, error: String(e?.message||e) }));
+    }
+    return;
+  }
+
+  // --- Batch Build API ---
+  if(url.pathname === '/api/batch/create' && req.method === 'POST'){
+    try{ await handleBatchCreate(req, res, { labRuntime: LAB_RUNTIME }); }catch(e){
+      res.writeHead(500, { 'Content-Type': 'application/json; charset=utf-8' });
+      res.end(JSON.stringify({ ok:false, error: String(e?.message||e) }));
+    }
+    return;
+  }
+  if(url.pathname === '/api/batch/start' && req.method === 'POST'){
+    try{ await handleBatchStart(req, res, { labRuntime: LAB_RUNTIME, labRoot: LAB_ROOT }); }catch(e){
+      res.writeHead(500, { 'Content-Type': 'application/json; charset=utf-8' });
+      res.end(JSON.stringify({ ok:false, error: String(e?.message||e) }));
+    }
+    return;
+  }
+  if(url.pathname === '/api/batch/status' && req.method === 'GET'){
+    try{ await handleBatchStatus(req, res, { labRuntime: LAB_RUNTIME }); }catch(e){
+      res.writeHead(500, { 'Content-Type': 'application/json; charset=utf-8' });
+      res.end(JSON.stringify({ ok:false, error: String(e?.message||e) }));
+    }
+    return;
+  }
+  if(url.pathname === '/api/batch/pause' && req.method === 'POST'){
+    try{ await handleBatchPause(req, res, { labRuntime: LAB_RUNTIME }); }catch(e){
+      res.writeHead(500, { 'Content-Type': 'application/json; charset=utf-8' });
+      res.end(JSON.stringify({ ok:false, error: String(e?.message||e) }));
+    }
+    return;
+  }
+  if(url.pathname === '/api/batch/resume' && req.method === 'POST'){
+    try{ await handleBatchResume(req, res, { labRuntime: LAB_RUNTIME, labRoot: LAB_ROOT }); }catch(e){
+      res.writeHead(500, { 'Content-Type': 'application/json; charset=utf-8' });
+      res.end(JSON.stringify({ ok:false, error: String(e?.message||e) }));
+    }
+    return;
+  }
+  if(url.pathname === '/api/batch/cancel' && req.method === 'POST'){
+    try{ await handleBatchCancel(req, res, { labRuntime: LAB_RUNTIME }); }catch(e){
+      res.writeHead(500, { 'Content-Type': 'application/json; charset=utf-8' });
+      res.end(JSON.stringify({ ok:false, error: String(e?.message||e) }));
+    }
+    return;
+  }
+  if(url.pathname === '/api/batch/retry-item' && req.method === 'POST'){
+    try{ await handleBatchRetryItem(req, res, { labRuntime: LAB_RUNTIME }); }catch(e){
+      res.writeHead(500, { 'Content-Type': 'application/json; charset=utf-8' });
+      res.end(JSON.stringify({ ok:false, error: String(e?.message||e) }));
+    }
+    return;
+  }
+  if(url.pathname === '/api/batch/skip-item' && req.method === 'POST'){
+    try{ await handleBatchSkipItem(req, res, { labRuntime: LAB_RUNTIME }); }catch(e){
+      res.writeHead(500, { 'Content-Type': 'application/json; charset=utf-8' });
+      res.end(JSON.stringify({ ok:false, error: String(e?.message||e) }));
+    }
+    return;
+  }
+  if(url.pathname === '/api/batch/events' && req.method === 'GET'){
+    try{ handleBatchEvents(req, res, { labRuntime: LAB_RUNTIME }); }catch(e){
+      res.writeHead(500, { 'Content-Type': 'application/json; charset=utf-8' });
+      res.end(JSON.stringify({ ok:false, error: String(e?.message||e) }));
+    }
+    return;
+  }
+  if(url.pathname === '/api/batch/jobs' && req.method === 'GET'){
+    try{ await handleBatchJobs(req, res, { labRuntime: LAB_RUNTIME }); }catch(e){
       res.writeHead(500, { 'Content-Type': 'application/json; charset=utf-8' });
       res.end(JSON.stringify({ ok:false, error: String(e?.message||e) }));
     }

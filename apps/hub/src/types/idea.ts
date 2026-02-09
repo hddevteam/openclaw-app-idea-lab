@@ -57,3 +57,23 @@ export interface Campaign {
     selectionSignals: unknown[];
   };
 }
+
+// Batch Build types
+export interface BatchItem {
+  ideaId: string;
+  status: 'queued' | 'running' | 'built' | 'failed' | 'skipped';
+  projectId: string | null;
+  error: string | null;
+  startedAt: string | null;
+  finishedAt: string | null;
+}
+
+export interface BatchJob {
+  jobId: string;
+  campaignId: string;
+  createdAt: string;
+  concurrency: number;
+  status: 'pending' | 'running' | 'done' | 'paused' | 'cancelled';
+  items: BatchItem[];
+  stats?: { total: number; queued: number; running: number; built: number; failed: number; skipped: number };
+}
